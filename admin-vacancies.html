@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacancies Management - ApartmentHub Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #1f2937; color: white; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
+        .sidebar-header { padding: 25px 20px; border-bottom: 1px solid #374151; }
+        .sidebar-header .logo { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 5px; }
+        .sidebar-header .logo span { color: #60a5fa; }
+        .sidebar-header p { font-size: 0.85rem; color: #9ca3af; }
+        .sidebar-nav { padding: 20px 0; }
+        .nav-section { margin-bottom: 25px; }
+        .nav-section-title { padding: 0 20px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 10px; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #d1d5db; text-decoration: none; transition: var(--transition); cursor: pointer; border-left: 3px solid transparent; }
+        .sidebar-link:hover, .sidebar-link.active { background: #374151; color: white; border-left-color: #60a5fa; }
+        .sidebar-link .icon { font-size: 1.2rem; width: 24px; text-align: center; }
+        .sidebar-link .badge { margin-left: auto; background: #ef4444; color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; }
+        .sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; border-top: 1px solid #374151; background: #1f2937; }
+        .admin-user { display: flex; align-items: center; gap: 12px; }
+        .admin-avatar { width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .admin-info strong { display: block; font-size: 0.9rem; }
+        .admin-info span { font-size: 0.8rem; color: #9ca3af; }
+        .main-content { flex: 1; margin-left: 260px; background: #f3f4f6; }
+        .top-header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 50; }
+        .header-left h1 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 3px; }
+        .header-left p { font-size: 0.9rem; color: var(--text-light); }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .header-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f3f4f6; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: var(--transition); position: relative; }
+        .page-content { padding: 30px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .page-header h1 { font-size: 1.8rem; color: var(--text-dark); }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-secondary { padding: 10px 20px; background: white; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; cursor: pointer; transition: var(--transition); }
+        .btn-secondary:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .btn-primary { padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .filter-bar { background: white; padding: 20px; border-radius: var(--radius); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        .filter-bar label { font-weight: 500; color: var(--text-dark); }
+        .filter-bar select, .filter-bar input { padding: 10px 15px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; min-width: 150px; }
+        .filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: var(--primary-color); }
+        .data-card { background: white; border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .card-header { padding: 20px 25px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .card-header h2 { font-size: 1.1rem; font-weight: 600; color: var(--text-dark); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        .data-table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; font-weight: 600; background: #f9fafb; }
+        .data-table tr:hover { background: #f9fafb; }
+        .vacancy-cell { display: flex; align-items: center; gap: 12px; }
+        .vacancy-thumb { width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .vacancy-name { font-weight: 600; color: var(--text-dark); }
+        .vacancy-address { font-size: 0.85rem; color: var(--text-light); }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+        .status-badge.available { background: #d1fae5; color: #059669; }
+        .status-badge.limited { background: #fef3c7; color: #d97706; }
+        .status-badge.urgent { background: #fee2e2; color: #dc2626; }
+        .status-badge.occupied { background: #dbeafe; color: #2563eb; }
+        .action-btns { display: flex; gap: 8px; }
+        .action-btn { width: 32px; height: 32px; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: var(--transition); }
+        .action-btn.view { background: #dbeafe; color: #2563eb; }
+        .action-btn.edit { background: #fef3c7; color: #d97706; }
+        .action-btn.delete { background: #fee2e2; color: #dc2626; }
+        .action-btn:hover { transform: scale(1.1); }
+        .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 20px; background: none; border: none; color: #f87171; cursor: pointer; font-size: 0.95rem; transition: var(--transition); margin-top: 10px; }
+        .logout-btn:hover { background: #374151; }
+        .mobile-menu-toggle { display: none; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--primary-color); color: white; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 200; }
+        @media (max-width: 992px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } .main-content { margin-left: 0; } .mobile-menu-toggle { display: flex; align-items: center; justify-content: center; } }
+        @media (max-width: 768px) { .page-content { padding: 15px; } .filter-bar { flex-direction: column; align-items: stretch; } .filter-bar select, .filter-bar input { min-width: 100%; } .header-actions { width: 100%; justify-content: flex-start; } }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">Apartment<span>Hub</span></div>
+                <p>Admin Portal</p>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="admin-dashboard.html" class="sidebar-link">
+                        <span class="icon">📊</span>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Property Management</div>
+                    <a href="admin-properties.html" class="sidebar-link">
+                        <span class="icon">🏠</span>
+                        Properties
+                    </a>
+                    <a href="admin-vacancies.html" class="sidebar-link active">
+                        <span class="icon">🚪</span>
+                        Vacancies
+                        <span class="badge">12</span>
+                    </a>
+                    <a href="admin-listings.html" class="sidebar-link">
+                        <span class="icon">📋</span>
+                        Listings
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Tenant Management</div>
+                    <a href="#" class="sidebar-link" onclick="showToast('Tenants section')">
+                        <span class="icon">👥</span>
+                        Tenants
+                    </a>
+                    <a href="#" class="sidebar-link" onclick="showToast('Applications section')">
+                        <span class="icon">📝</span>
+                        Applications
+                        <span class="badge">5</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-user">
+                    <div class="admin-avatar">A</div>
+                    <div class="admin-info">
+                        <strong>Administrator</strong>
+                        <span>admin@apartmenthub.com</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="adminLogout()">
+                    <span>🚪</span> Logout
+                </button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h1>Vacancies</h1>
+                    <p>Manage all vacant rooms and units</p>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" onclick="toggleSidebar()">☰</button>
+                </div>
+            </header>
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>Vacant Rooms</h1>
+                    <div class="header-actions">
+                        <button class="btn-secondary" onclick="exportVacancies()">📤 Export</button>
+                        <button class="btn-primary" onclick="showAddVacancyModal()">➕ Add Vacancy</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <label>Search:</label>
+                    <input type="text" id="searchInput" placeholder="Search vacancies..." onkeyup="filterVacancies()">
+                    <label>Status:</label>
+                    <select id="statusFilter" onchange="filterVacancies()">
+                        <option value="">All Status</option>
+                        <option value="available">Available</option>
+                        <option value="limited">Limited</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                    <label>Type:</label>
+                    <select id="typeFilter" onchange="filterVacancies()">
+                        <option value="">All Types</option>
+                        <option value="Studio">Studio</option>
+                        <option value="1 Bedroom">1 Bedroom</option>
+                        <option value="2 Bedrooms">2 Bedrooms</option>
+                        <option value="3 Bedrooms">3 Bedrooms</option>
+                    </select>
+                    <label>Price:</label>
+                    <select id="priceFilter" onchange="filterVacancies()">
+                        <option value="">All Prices</option>
+                        <option value="0-1000">Under $1,000</option>
+                        <option value="1000-1500">$1,000 - $1,500</option>
+                        <option value="1500-2000">$1,500 - $2,000</option>
+                        <option value="2000+">$2,000+</option>
+                    </select>
+                </div>
+                <div class="data-card">
+                    <div class="card-header">
+                        <h2>Vacancies List (<span id="vacancyCount">12</span>)</h2>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Type</th>
+                                <th>Price</th>
+                                <th>Move-in</th>
+                                <th>Status</th>
+                                <th>Applications</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vacanciesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <!-- Add Vacancy Modal -->
+    <div id="addVacancyModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-btn" onclick="closeModal('addVacancyModal')">&times;</span>
+            <div class="modal-body">
+                <h2 style="margin-bottom: 20px;">Add New Vacancy</h2>
+                <form id="addVacancyForm" onsubmit="handleAddVacancy(event)">
+                    <div class="form-group">
+                        <label>Room Title</label>
+                        <input type="text" id="vacTitle" required placeholder="e.g., Cozy Studio Room">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Room Type</label>
+                            <select id="vacType" required>
+                                <option value="">Select Type</option>
+                                <option value="Studio">Studio</option>
+                                <option value="1 Bedroom">1 Bedroom</option>
+                                <option value="2 Bedrooms">2 Bedrooms</option>
+                                <option value="3 Bedrooms">3 Bedrooms</option>
+                                <option value="Shared Room">Shared Room</option>
+                                <option value="Master Bedroom">Master Bedroom</option>
+                                <option value="Loft">Loft</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Monthly Price ($)</label>
+                            <input type="number" id="vacPrice" required placeholder="850" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="vacAddress" required placeholder="Full address">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Bedrooms</label>
+                            <select id="vacBeds" required>
+                                <option value="0">Studio</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bathrooms</label>
+                            <select id="vacBaths" required>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sq. Ft.</label>
+                            <input type="number" id="vacSqft" placeholder="350" min="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="vacStatus" required>
+                                <option value="available">Available</option>
+                                <option value="limited">Limited</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Move-in Date</label>
+                            <input type="text" id="vacMoveIn" placeholder="e.g., Immediate, Nov 1, 2024">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Amenities (comma separated)</label>
+                        <input type="text" id="vacAmenities" placeholder="Furnished, WiFi, Laundry">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Add Vacancy</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let vacancies = [
+            { id: 1, title: "Cozy Studio Room", type: "Studio", price: 850, address: "123 Main Street, Downtown", beds: 0, baths: 1, sqft: 350, status: "available", moveIn: "Immediate", amenities: ["Furnished", "WiFi", "Laundry"], applications: 3 },
+            { id: 2, title: "Bright 1BR Room", type: "1 Bedroom", price: 1200, address: "456 Oak Avenue, Midtown", beds: 1, baths: 1, sqft: 500, status: "available", moveIn: "Nov 1, 2024", amenities: ["Kitchen", "A/C", "Parking"], applications: 5 },
+            { id: 3, title: "Spacious 2BR Suite", type: "2 Bedrooms", price: 1750, address: "789 Pine Road, Westside", beds: 2, baths: 2, sqft: 950, status: "limited", moveIn: "Immediate", amenities: ["Balcony", "Gym", "Pet Friendly"], applications: 8 },
+            { id: 4, title: "Deluxe Master Room", type: "Master Bedroom", price: 1450, address: "321 Elm Street, University District", beds: 1, baths: 1, sqft: 600, status: "available", moveIn: "Dec 1, 2024", amenities: ["Private Bath", "Walk-in Closet", "Desk"], applications: 2 },
+            { id: 5, title: "Shared Room - Male", type: "Shared Room", price: 550, address: "555 College Ave, Campus Area", beds: 1, baths: 1, sqft: 250, status: "urgent", moveIn: "Immediate", amenities: ["All Bills Included", "Study Room"], applications: 12 },
+            { id: 6, title: "Shared Room - Female", type: "Shared Room", price: 550, address: "556 College Ave, Campus Area", beds: 1, baths: 1, sqft: 250, status: "available", moveIn: "Nov 15, 2024", amenities: ["All Bills Included", "Study Room"], applications: 7 },
+            { id: 7, title: "Loft Style Room", type: "Loft", price: 1650, address: "888 Industrial Blvd, Arts District", beds: 1, baths: 1, sqft: 700, status: "available", moveIn: "Immediate", amenities: ["High Ceilings", "Exposed Brick", "Windows"], applications: 4 },
+            { id: 8, title: "Garden View Room", type: "1 Bedroom", price: 1350, address: "999 Garden Court, Green Neighborhood", beds: 1, baths: 1, sqft: 550, status: "limited", moveIn: "Nov 20, 2024", amenities: ["Garden Access", "Quiet", "Parking"], applications: 6 },
+            { id: 9, title: "Downtown Executive Room", type: "Executive Suite", price: 2200, address: "100 Financial District, Tower A", beds: 1, baths: 1, sqft: 650, status: "available", moveIn: "Immediate", amenities: ["Concierge", "Rooftop", "Smart Home"], applications: 2 },
+            { id: 10, title: "Budget Friendly Room", type: "Room", price: 750, address: "222 Suburban Lane, Eastside", beds: 1, baths: 1, sqft: 400, status: "available", moveIn: "Immediate", amenities: ["Bus Route", "Shopping Nearby"], applications: 9 },
+            { id: 11, title: "Family Size Room", type: "3 Bedrooms", price: 2400, address: "444 Family Circle, Suburbs", beds: 3, baths: 2, sqft: 1200, status: "available", moveIn: "Dec 15, 2024", amenities: ["Yard", "Garage", "Schools Nearby"], applications: 3 },
+            { id: 12, title: "Penthouse Room", type: "Penthouse", price: 3500, address: "777 Sky Tower, Downtown", beds: 2, baths: 2, sqft: 1100, status: "available", moveIn: "Immediate", amenities: ["Panoramic Views", "Private Terrace", "Spa"], applications: 1 }
+        ];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const adminUser = localStorage.getItem('adminUser');
+            if (!adminUser) { window.location.href = 'admin-login.html'; return; }
+            renderVacancies();
+        });
+        
+        function renderVacancies(data = vacancies) {
+            const tbody = document.getElementById('vacanciesTableBody');
+            document.getElementById('vacancyCount').textContent = data.length;
+            tbody.innerHTML = data.map(v => `
+                <tr>
+                    <td>
+                        <div class="vacancy-cell">
+                            <div class="vacancy-thumb">🚪</div>
+                            <div>
+                                <div class="vacancy-name">${v.title}</div>
+                                <div class="vacancy-address">${v.address}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${v.type}</td>
+                    <td>$${v.price.toLocaleString()}</td>
+                    <td>${v.moveIn}</td>
+                    <td><span class="status-badge ${v.status}">${v.status}</span></td>
+                    <td>${v.applications} pending</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view" onclick="viewVacancy(${v.id})" title="View">👁️</button>
+                            <button class="action-btn edit" onclick="editVacancy(${v.id})" title="Edit">✏️</button>
+                            <button class="action-btn delete" onclick="deleteVacancy(${v.id})" title="Delete">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function filterVacancies() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const price = document.getElementById('priceFilter').value;
+            
+            let filtered = vacancies.filter(v => {
+                const matchSearch = v.title.toLowerCase().includes(search) || v.address.toLowerCase().includes(search);
+                const matchStatus = !status || v.status === status;
+                const matchType = !type || v.type === type;
+                let matchPrice = true;
+                if (price) {
+                    const [min, max] = price.split('-').map(p => p.replace('+', ''));
+                    if (price.endsWith('+')) matchPrice = v.price >= parseInt(min);
+                    else matchPrice = v.price >= parseInt(min) && v.price <= parseInt(max);
+                }
+                return matchSearch && matchStatus && matchType && matchPrice;
+            });
+            renderVacancies(filtered);
+        }
+        
+        function showAddVacancyModal() {
+            document.getElementById('addVacancyModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function handleAddVacancy(e) {
+            e.preventDefault();
+            const newVacancy = {
+                id: Date.now(),
+                title: document.getElementById('vacTitle').value,
+                type: document.getElementById('vacType').value,
+                price: parseInt(document.getElementById('vacPrice').value),
+                address: document.getElementById('vacAddress').value,
+                beds: parseInt(document.getElementById('vacBeds').value),
+                baths: parseInt(document.getElementById('vacBaths').value),
+                sqft: parseInt(document.getElementById('vacSqft').value) || 0,
+                status: document.getElementById('vacStatus').value,
+                moveIn: document.getElementById('vacMoveIn').value || 'Immediate',
+                amenities: document.getElementById('vacAmenities').value.split(',').map(a => a.trim()),
+                applications: 0
+            };
+            vacancies.unshift(newVacancy);
+            renderVacancies();
+            closeModal('addVacancyModal');
+            document.getElementById('addVacancyForm').reset();
+            showToast('Vacancy added successfully!', 'success');
+        }
+        
+        function viewVacancy(id) {
+            const v = vacancies.find(v => v.id === id);
+            if (!v) return;
+            alert(`Vacancy Details:\n\nTitle: ${v.title}\nType: ${v.type}\nAddress: ${v.address}\nPrice: $${v.price}/month\nBeds: ${v.beds}\nBaths: ${v.baths}\nSq Ft: ${v.sqft}\nStatus: ${v.status}\nMove-in: ${v.moveIn}\nAmenities: ${v.amenities.join(', ')}`);
+        }
+        
+        function editVacancy(id) { showToast('Edit vacancy - feature coming soon!', 'success'); }
+        
+        function deleteVacancy(id) {
+            if (confirm('Are you sure you want to delete this vacancy?')) {
+                vacancies = vacancies.filter(v => v.id !== id);
+                renderVacancies();
+                showToast('Vacancy deleted successfully!', 'success');
+            }
+        }
+        
+        function exportVacancies() {
+            const csv = vacancies.map(v => `${v.title},${v.type},${v.address},${v.price},${v.status},${v.moveIn}`).join('\n');
+            const header = 'Title,Type,Address,Price,Status,Move-in\n';
+            const blob = new Blob([header + csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'vacancies.csv';
+            a.click();
+            showToast('Vacancies exported!', 'success');
+        }
+        
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); document.body.style.overflow = ''; }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function adminLogout() { localStorage.removeItem('adminUser'); showToast('Logged out successfully', 'success'); setTimeout(() => window.location.href = 'admin-login.html', 1000); }
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.style.cssText = 'position:fixed;bottom:30px;right:30px;padding:15px 25px;border-radius:8px;z-index:3000;background:' + (type === 'success' ? '#10b981' : '#ef4444') + ';color:white;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); document.body.style.overflow = ''; } });
+        });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); document.body.style.overflow = ''; } });
+    </script>
+</body>
+</html>

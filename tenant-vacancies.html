@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacancies - ApartmentHub</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tenant-wrapper { display: flex; min-height: 100vh; }
+        .tenant-sidebar { width: 260px; background: #1f2937; color: white; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
+        .tenant-sidebar-header { padding: 25px 20px; border-bottom: 1px solid #374151; }
+        .tenant-sidebar-header .logo { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 5px; }
+        .tenant-sidebar-header .logo span { color: #60a5fa; }
+        .tenant-sidebar-header p { font-size: 0.85rem; color: #9ca3af; }
+        .tenant-sidebar-nav { padding: 20px 0; }
+        .nav-section { margin-bottom: 25px; }
+        .nav-section-title { padding: 0 20px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 10px; }
+        .tenant-sidebar-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #d1d5db; text-decoration: none; transition: var(--transition); cursor: pointer; border-left: 3px solid transparent; }
+        .tenant-sidebar-link:hover, .tenant-sidebar-link.active { background: #374151; color: white; border-left-color: #60a5fa; }
+        .tenant-sidebar-link .icon { font-size: 1.2rem; width: 24px; text-align: center; }
+        .tenant-sidebar-link .badge { margin-left: auto; background: var(--primary-color); color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; }
+        .tenant-sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; border-top: 1px solid #374151; background: #1f2937; }
+        .tenant-user { display: flex; align-items: center; gap: 12px; }
+        .tenant-avatar { width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .tenant-info strong { display: block; font-size: 0.9rem; }
+        .tenant-info span { font-size: 0.8rem; color: #9ca3af; }
+        .tenant-main { flex: 1; margin-left: 260px; background: #f3f4f6; }
+        .tenant-header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 50; }
+        .tenant-header h1 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 3px; }
+        .tenant-header p { font-size: 0.9rem; color: var(--text-light); }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .header-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f3f4f6; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: var(--transition); position: relative; }
+        .tenant-content { padding: 30px; }
+        
+        /* Stats */
+        .vacancy-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .vacancy-stat { background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .vacancy-stat .number { font-size: 2rem; font-weight: 700; color: var(--primary-color); }
+        .vacancy-stat .label { font-size: 0.9rem; color: var(--text-light); margin-top: 5px; }
+        
+        /* Filter Tabs */
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .filter-tab { padding: 10px 20px; background: white; border: 2px solid #e5e7eb; border-radius: 25px; font-size: 0.9rem; cursor: pointer; transition: var(--transition); }
+        .filter-tab:hover, .filter-tab.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        
+        /* Vacancies Grid */
+        .vacancies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .vacancy-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: var(--transition); cursor: pointer; }
+        .vacancy-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .vacancy-image { position: relative; height: 160px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+        .vacancy-status { position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .vacancy-status.available { background: #10b981; color: white; }
+        .vacancy-status.limited { background: #f59e0b; color: white; }
+        .vacancy-status.urgent { background: #ef4444; color: white; }
+        .vacancy-save { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; background: rgba(255,255,255,0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 1.1rem; transition: var(--transition); }
+        .vacancy-save.saved { color: #ef4444; }
+        .vacancy-content { padding: 20px; }
+        .vacancy-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .vacancy-price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
+        .vacancy-price span { font-size: 0.9rem; font-weight: 400; color: #6b7280; }
+        .vacancy-type { padding: 3px 10px; background: #f3f4f6; border-radius: 12px; font-size: 0.8rem; }
+        .vacancy-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; color: #1f2937; }
+        .vacancy-address { color: #6b7280; font-size: 0.9rem; margin-bottom: 15px; }
+        .vacancy-amenities { display: flex; gap: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; flex-wrap: wrap; }
+        .vacancy-amenity { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: #6b7280; background: #f3f4f6; padding: 4px 8px; border-radius: 6px; }
+        .vacancy-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; }
+        .vacancy-movein { font-size: 0.85rem; color: #6b7280; }
+        .vacancy-movein strong { color: #10b981; }
+        .vacancy-btn { padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: var(--transition); }
+        .vacancy-btn:hover { background: var(--primary-dark); }
+        
+        .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 20px; background: none; border: none; color: #f87171; cursor: pointer; font-size: 0.95rem; transition: var(--transition); margin-top: 10px; }
+        .logout-btn:hover { background: #374151; }
+        
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 16px; width: 90%; max-width: 550px; max-height: 90vh; overflow-y: auto; animation: modalSlide 0.3s ease; }
+        @keyframes modalSlide { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header { padding: 25px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 1.3rem; font-weight: 600; color: #1f2937; margin: 0; }
+        .modal-close { width: 36px; height: 36px; border-radius: 50%; border: none; background: #f3f4f6; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .modal-close:hover { background: #e5e7eb; }
+        .modal-body { padding: 25px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #374151; font-size: 0.95rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.95rem; transition: var(--transition); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-color); }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-checkbox { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+        .form-checkbox input { width: auto; margin-top: 3px; }
+        .form-checkbox span { font-size: 0.85rem; color: #6b7280; }
+        .modal-footer { padding: 20px 25px; border-top: 1px solid #e5e7eb; display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-btn { padding: 12px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: var(--transition); }
+        .modal-btn.secondary { background: white; border: 2px solid #e5e7eb; color: #374151; }
+        .modal-btn.secondary:hover { border-color: #d1d5db; background: #f9fafb; }
+        .modal-btn.primary { background: var(--primary-color); border: none; color: white; }
+        .modal-btn.primary:hover { background: var(--primary-dark); }
+        
+        /* Tour Calendar */
+        .tour-calendar { margin-top: 15px; }
+        .tour-date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; }
+        .tour-date { padding: 10px 5px; text-align: center; border-radius: 8px; cursor: pointer; transition: var(--transition); border: 2px solid transparent; }
+        .tour-date:hover { background: #f3f4f6; }
+        .tour-date.selected { background: var(--primary-color); color: white; }
+        .tour-date.disabled { opacity: 0.4; cursor: not-allowed; }
+        .tour-date .day-name { font-size: 0.75rem; font-weight: 500; }
+        .tour-date .day-num { font-size: 1.1rem; font-weight: 600; }
+        .tour-time-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .tour-time-slot { padding: 12px; text-align: center; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: var(--transition); }
+        .tour-time-slot:hover { border-color: var(--primary-color); }
+        .tour-time-slot.selected { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+        .tour-property-preview { background: #f9fafb; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .tour-property-preview h4 { margin: 0 0 5px; color: #1f2937; }
+        .tour-property-preview p { margin: 0; font-size: 0.85rem; color: #6b7280; }
+        
+        .application-success { text-align: center; padding: 30px 20px; }
+        .success-icon { width: 80px; height: 80px; background: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2.5rem; }
+        .application-success h3 { color: #059669; margin-bottom: 10px; }
+        .application-success p { color: #6b7280; font-size: 0.95rem; margin-bottom: 20px; }
+        
+        .mobile-menu-toggle { display: none; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--primary-color); color: white; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 200; }
+        @media (max-width: 992px) { .tenant-sidebar { transform: translateX(-100%); } .tenant-sidebar.show { transform: translateX(0); } .tenant-main { margin-left: 0; } .mobile-menu-toggle { display: flex; align-items: center; justify-content: center; } }
+        @media (max-width: 768px) { .tenant-content { padding: 15px; } .vacancies-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="tenant-wrapper">
+        <aside class="tenant-sidebar" id="sidebar">
+            <div class="tenant-sidebar-header">
+                <div class="logo">Apartment<span>Hub</span></div>
+                <p>Tenant Portal</p>
+            </div>
+            <nav class="tenant-sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="tenant-dashboard.html" class="tenant-sidebar-link">
+                        <span class="icon">📊</span>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Search</div>
+                    <a href="tenant-listings.html" class="tenant-sidebar-link">
+                        <span class="icon">🔍</span>
+                        Browse Listings
+                    </a>
+                    <a href="tenant-vacancies.html" class="tenant-sidebar-link active">
+                        <span class="icon">🚪</span>
+                        Vacancies
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">My Account</div>
+                    <a href="tenant-dashboard.html#saved" class="tenant-sidebar-link">
+                        <span class="icon">❤️</span>
+                        Saved Listings
+                        <span class="badge" id="savedCount">0</span>
+                    </a>
+                    <a href="tenant-dashboard.html#tours" class="tenant-sidebar-link">
+                        <span class="icon">📅</span>
+                        Tours
+                    </a>
+                    <a href="tenant-messages.html" class="tenant-sidebar-link">
+                        <span class="icon">💬</span>
+                        Messages
+                        <span class="badge">2</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="tenant-sidebar-footer">
+                <div class="tenant-user">
+                    <div class="tenant-avatar" id="userInitial">T</div>
+                    <div class="tenant-info">
+                        <strong id="userName">Tenant</strong>
+                        <span id="userEmail">tenant@example.com</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="tenantLogout()">
+                    <span>🚪</span> Logout
+                </button>
+            </div>
+        </aside>
+        <main class="tenant-main">
+            <header class="tenant-header">
+                <div class="header-left">
+                    <h1>Vacant Rooms</h1>
+                    <p>Available rooms ready for immediate move-in</p>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" onclick="toggleSidebar()">☰</button>
+                </div>
+            </header>
+            <div class="tenant-content">
+                <!-- Stats -->
+                <div class="vacancy-stats">
+                    <div class="vacancy-stat">
+                        <div class="number">12</div>
+                        <div class="label">Total Vacancies</div>
+                    </div>
+                    <div class="vacancy-stat">
+                        <div class="number">8</div>
+                        <div class="label">Available Now</div>
+                    </div>
+                    <div class="vacancy-stat">
+                        <div class="number">$550</div>
+                        <div class="label">Starting Price</div>
+                    </div>
+                    <div class="vacancy-stat">
+                        <div class="number">3</div>
+                        <div class="label">Urgent</div>
+                    </div>
+                </div>
+                
+                <!-- Filter Tabs -->
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="filterVacancies('all', this)">All</button>
+                    <button class="filter-tab" onclick="filterVacancies('available', this)">Available</button>
+                    <button class="filter-tab" onclick="filterVacancies('limited', this)">Limited</button>
+                    <button class="filter-tab" onclick="filterVacancies('urgent', this)">Urgent</button>
+                    <button class="filter-tab" onclick="filterVacancies('under1000', this)">Under $1,000</button>
+                </div>
+                
+                <!-- Vacancies Grid -->
+                <div class="vacancies-grid" id="vacanciesGrid"></div>
+            </div>
+        </main>
+    </div>
+    
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <!-- Application Modal -->
+    <div class="modal-overlay" id="applicationModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📝 Apply for Room</h2>
+                <button class="modal-close" onclick="closeApplicationModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="applicationContent">
+                    <div id="appPropertyInfo" class="tour-property-preview" style="display: none; margin-bottom: 20px;">
+                        <h4 id="appPropertyTitle"></h4>
+                        <p id="appPropertyAddress"></p>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" id="appFirstName" placeholder="John">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" id="appLastName" placeholder="Doe">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="appEmail" placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="appPhone" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label>Move-in Date</label>
+                        <input type="date" id="appMoveIn">
+                    </div>
+                    <div class="form-group">
+                        <label>Lease Duration</label>
+                        <select id="appLeaseTerm">
+                            <option value="3">3 Months</option>
+                            <option value="6">6 Months</option>
+                            <option value="12" selected>12 Months</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Budget ($)</label>
+                        <input type="number" id="appBudget" placeholder="1200">
+                    </div>
+                    <div class="form-group">
+                        <label>Employment Status</label>
+                        <select id="appEmployment">
+                            <option value="employed">Employed</option>
+                            <option value="student">Student</option>
+                            <option value="freelance">Freelance</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="appTerms">
+                            <span>I authorize a background check and confirm all information is accurate.</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="applicationSuccess" class="application-success" style="display: none;">
+                    <div class="success-icon">✓</div>
+                    <h3>Application Submitted!</h3>
+                    <p>The room owner will review and contact you within 24-48 hours.</p>
+                </div>
+            </div>
+            <div class="modal-footer" id="applicationFooter">
+                <button class="modal-btn secondary" onclick="closeApplicationModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="submitApplication()">Submit Application</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tour Modal -->
+    <div class="modal-overlay" id="tourModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📅 Schedule a Tour</h2>
+                <button class="modal-close" onclick="closeTourModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="tourContent">
+                    <div id="tourPropertyInfo" class="tour-property-preview" style="display: none; margin-bottom: 20px;">
+                        <h4 id="tourPropertyTitle"></h4>
+                        <p id="tourPropertyAddress"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Select a Date</label>
+                        <div class="tour-calendar">
+                            <div class="tour-date-grid" id="tourDateGrid"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Time Slots</label>
+                        <div class="tour-time-slots" id="tourTimeSlots">
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '9:00 AM')">9:00 AM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '10:00 AM')">10:00 AM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '11:00 AM')">11:00 AM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '12:00 PM')">12:00 PM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '2:00 PM')">2:00 PM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '4:00 PM')">4:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" id="tourName" placeholder="Full Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="tourPhone" placeholder="(555) 123-4567">
+                    </div>
+                </div>
+                <div id="tourSuccess" class="application-success" style="display: none;">
+                    <div class="success-icon">✓</div>
+                    <h3>Tour Scheduled!</h3>
+                    <p>You will receive a confirmation with all the tour details.</p>
+                </div>
+            </div>
+            <div class="modal-footer" id="tourFooter">
+                <button class="modal-btn secondary" onclick="closeTourModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="submitTour()">Confirm Tour</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const vacanciesData = [
+            { id: 1, title: "Cozy Studio Room", type: "Studio", price: 850, address: "123 Main Street, Downtown", beds: 0, baths: 1, sqft: 350, status: "available", moveIn: "Immediate", amenities: ["Furnished", "WiFi", "Laundry"] },
+            { id: 2, title: "Bright 1BR Room", type: "1 Bedroom", price: 1200, address: "456 Oak Avenue, Midtown", beds: 1, baths: 1, sqft: 500, status: "available", moveIn: "Nov 1, 2024", amenities: ["Kitchen", "A/C", "Parking"] },
+            { id: 3, title: "Spacious 2BR Suite", type: "2 Bedrooms", price: 1750, address: "789 Pine Road, Westside", beds: 2, baths: 2, sqft: 950, status: "limited", moveIn: "Immediate", amenities: ["Balcony", "Gym", "Pet Friendly"] },
+            { id: 4, title: "Deluxe Master Room", type: "Master Bedroom", price: 1450, address: "321 Elm Street, University District", beds: 1, baths: 1, sqft: 600, status: "available", moveIn: "Dec 1, 2024", amenities: ["Private Bath", "Walk-in Closet", "Desk"] },
+            { id: 5, title: "Shared Room - Male", type: "Shared Room", price: 550, address: "555 College Ave, Campus Area", beds: 1, baths: 1, sqft: 250, status: "urgent", moveIn: "Immediate", amenities: ["All Bills Included", "Study Room"] },
+            { id: 6, title: "Shared Room - Female", type: "Shared Room", price: 550, address: "556 College Ave, Campus Area", beds: 1, baths: 1, sqft: 250, status: "available", moveIn: "Nov 15, 2024", amenities: ["All Bills Included", "Study Room"] },
+            { id: 7, title: "Loft Style Room", type: "Loft", price: 1650, address: "888 Industrial Blvd, Arts District", beds: 1, baths: 1, sqft: 700, status: "available", moveIn: "Immediate", amenities: ["High Ceilings", "Exposed Brick", "Windows"] },
+            { id: 8, title: "Garden View Room", type: "1 Bedroom", price: 1350, address: "999 Garden Court, Green Neighborhood", beds: 1, baths: 1, sqft: 550, status: "limited", moveIn: "Nov 20, 2024", amenities: ["Garden Access", "Quiet", "Parking"] },
+            { id: 9, title: "Downtown Executive Room", type: "Executive Suite", price: 2200, address: "100 Financial District, Tower A", beds: 1, baths: 1, sqft: 650, status: "available", moveIn: "Immediate", amenities: ["Concierge", "Rooftop", "Smart Home"] },
+            { id: 10, title: "Budget Friendly Room", type: "Room", price: 750, address: "222 Suburban Lane, Eastside", beds: 1, baths: 1, sqft: 400, status: "available", moveIn: "Immediate", amenities: ["Bus Route", "Shopping Nearby"] },
+            { id: 11, title: "Family Size Room", type: "3 Bedrooms", price: 2400, address: "444 Family Circle, Suburbs", beds: 3, baths: 2, sqft: 1200, status: "available", moveIn: "Dec 15, 2024", amenities: ["Yard", "Garage", "Schools Nearby"] },
+            { id: 12, title: "Penthouse Room", type: "Penthouse", price: 3500, address: "777 Sky Tower, Downtown", beds: 2, baths: 2, sqft: 1100, status: "available", moveIn: "Immediate", amenities: ["Panoramic Views", "Private Terrace", "Spa"] }
+        ];
+        
+        let currentUser = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedUser = localStorage.getItem('apartmentHubUser');
+            if (!savedUser) { window.location.href = 'index.html'; return; }
+            
+            currentUser = JSON.parse(savedUser);
+            document.getElementById('userName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('userInitial').textContent = currentUser.firstName.charAt(0).toUpperCase();
+            
+            updateSavedCount();
+            renderVacancies(vacanciesData);
+        });
+        
+        function getSavedListings() {
+            return JSON.parse(localStorage.getItem('savedListings') || '[]');
+        }
+        
+        function updateSavedCount() {
+            document.getElementById('savedCount').textContent = getSavedListings().length;
+        }
+        
+        function isSaved(id) {
+            return getSavedListings().includes(id);
+        }
+        
+        function toggleSave(id) {
+            if (!currentUser) { showToast('Please login to save', 'error'); return; }
+            let saved = getSavedListings();
+            const btn = document.querySelector(`[data-save-id="${id}"]`);
+            
+            if (saved.includes(id)) {
+                saved = saved.filter(s => s !== id);
+                if (btn) btn.classList.remove('saved');
+                showToast('Removed from saved', 'success');
+            } else {
+                saved.push(id);
+                if (btn) btn.classList.add('saved');
+                showToast('Vacancy saved!', 'success');
+            }
+            localStorage.setItem('savedListings', JSON.stringify(saved));
+            updateSavedCount();
+        }
+        
+        function renderVacancies(vacancies) {
+            const grid = document.getElementById('vacanciesGrid');
+            grid.innerHTML = vacancies.map(v => `
+                <div class="vacancy-card" onclick="viewVacancy(${v.id})">
+                    <div class="vacancy-image">
+                        🚪
+                        <span class="vacancy-status ${v.status}">${v.status}</span>
+                        <button class="vacancy-save ${isSaved(v.id) ? 'saved' : ''}" data-save-id="${v.id}" onclick="event.stopPropagation(); toggleSave(${v.id})">♥</button>
+                    </div>
+                    <div class="vacancy-content">
+                        <div class="vacancy-header">
+                            <div class="vacancy-price">$${v.price}<span>/month</span></div>
+                            <span class="vacancy-type">${v.type}</span>
+                        </div>
+                        <h3 class="vacancy-title">${v.title}</h3>
+                        <div class="vacancy-address">📍 ${v.address}</div>
+                        <div class="vacancy-amenities">
+                            <span class="vacancy-amenity">🛏️ ${v.beds === 0 ? 'Studio' : v.beds + ' Bed'}</span>
+                            <span class="vacancy-amenity">🚿 ${v.baths} Bath</span>
+                            <span class="vacancy-amenity">📐 ${v.sqft} sqft</span>
+                        </div>
+                        <div class="vacancy-footer">
+                            <span class="vacancy-movein">Move-in: <strong>${v.moveIn}</strong></span>
+                            <button class="vacancy-btn" onclick="event.stopPropagation(); applyToVacancy(${v.id})">Apply Now</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterVacancies(filter, btn) {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            
+            let filtered = vacanciesData;
+            if (filter === 'all') filtered = vacanciesData;
+            else if (filter === 'under1000') filtered = vacanciesData.filter(v => v.price < 1000);
+            else filtered = vacanciesData.filter(v => v.status === filter);
+            
+            renderVacancies(filtered);
+        }
+        
+        function viewVacancy(id) {
+            const v = vacanciesData.find(v => v.id === id);
+            if (!v) return;
+            openTourModal(v);
+        }
+        
+        function applyToVacancy(id) {
+            const v = vacanciesData.find(v => v.id === id);
+            if (!currentUser) { showToast('Please login to apply', 'error'); return; }
+            openApplicationModal(v);
+        }
+        
+        // ==================== APPLICATION MODAL ====================
+        let currentApplicationProperty = null;
+        
+        function openApplicationModal(item) {
+            currentApplicationProperty = item;
+            document.getElementById('appPropertyInfo').style.display = 'block';
+            document.getElementById('appPropertyTitle').textContent = item.title;
+            document.getElementById('appPropertyAddress').textContent = item.address + ' - $' + item.price + '/mo';
+            document.getElementById('applicationContent').style.display = 'block';
+            document.getElementById('applicationSuccess').style.display = 'none';
+            document.getElementById('applicationFooter').style.display = 'flex';
+            document.getElementById('applicationModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            if (currentUser) {
+                const names = (currentUser.firstName || '').split(' ');
+                document.getElementById('appFirstName').value = names[0] || '';
+                document.getElementById('appLastName').value = names[1] || '';
+                document.getElementById('appEmail').value = currentUser.email || '';
+            }
+        }
+        
+        function closeApplicationModal() {
+            document.getElementById('applicationModal').classList.remove('show');
+            document.body.style.overflow = '';
+            currentApplicationProperty = null;
+        }
+        
+        function submitApplication() {
+            const firstName = document.getElementById('appFirstName').value;
+            const lastName = document.getElementById('appLastName').value;
+            const email = document.getElementById('appEmail').value;
+            const phone = document.getElementById('appPhone').value;
+            const moveIn = document.getElementById('appMoveIn').value;
+            const leaseTerm = document.getElementById('appLeaseTerm').value;
+            const budget = document.getElementById('appBudget').value;
+            const employment = document.getElementById('appEmployment').value;
+            const terms = document.getElementById('appTerms').checked;
+            
+            if (!firstName || !lastName) { showToast('Please enter your name', 'error'); return; }
+            if (!email) { showToast('Please enter your email', 'error'); return; }
+            if (!phone) { showToast('Please enter your phone', 'error'); return; }
+            if (!terms) { showToast('Please accept the terms', 'error'); return; }
+            
+            const applications = JSON.parse(localStorage.getItem('tenantApplications') || '[]');
+            applications.push({
+                id: Date.now(),
+                property: currentApplicationProperty.title,
+                propertyId: currentApplicationProperty.id,
+                firstName, lastName, email, phone, moveIn, leaseTerm, budget, employment,
+                submittedAt: new Date().toISOString()
+            });
+            localStorage.setItem('tenantApplications', JSON.stringify(applications));
+            
+            document.getElementById('applicationContent').style.display = 'none';
+            document.getElementById('applicationSuccess').style.display = 'block';
+            document.getElementById('applicationFooter').style.display = 'none';
+            showToast('Application submitted!', 'success');
+        }
+        
+        // ==================== TOUR MODAL ====================
+        let currentTourProperty = null;
+        let selectedTourDate = null;
+        let selectedTourTime = null;
+        
+        function openTourModal(item) {
+            currentTourProperty = item;
+            document.getElementById('tourPropertyInfo').style.display = 'block';
+            document.getElementById('tourPropertyTitle').textContent = item.title;
+            document.getElementById('tourPropertyAddress').textContent = item.address;
+            document.getElementById('tourContent').style.display = 'block';
+            document.getElementById('tourSuccess').style.display = 'none';
+            document.getElementById('tourFooter').style.display = 'flex';
+            document.getElementById('tourModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            initTourCalendar();
+            
+            if (currentUser) {
+                const name = (currentUser.firstName || '') + ' ' + (currentUser.lastName || '');
+                document.getElementById('tourName').value = name.trim();
+            }
+        }
+        
+        function closeTourModal() {
+            document.getElementById('tourModal').classList.remove('show');
+            document.body.style.overflow = '';
+            currentTourProperty = null;
+            selectedTourDate = null;
+            selectedTourTime = null;
+        }
+        
+        function initTourCalendar() {
+            const grid = document.getElementById('tourDateGrid');
+            const today = new Date();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let html = '';
+            for (let i = 1; i <= 14; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const dayName = days[date.getDay()];
+                const dayNum = date.getDate();
+                const month = date.getMonth() + 1;
+                const dateStr = date.getFullYear() + '-' + String(month).padStart(2, '0') + '-' + String(dayNum).padStart(2, '0');
+                html += '<div class="tour-date" onclick="selectTourDate(\'' + dateStr + '\', this)" data-date="' + dateStr + '"><div class="day-name">' + dayName + '</div><div class="day-num">' + dayNum + '</div></div>';
+            }
+            grid.innerHTML = html;
+        }
+        
+        function selectTourDate(dateStr, element) {
+            selectedTourDate = dateStr;
+            document.querySelectorAll('.tour-date').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        function selectTimeSlot(element, time) {
+            selectedTourTime = time;
+            document.querySelectorAll('.tour-time-slot').forEach(s => s.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        function submitTour() {
+            const name = document.getElementById('tourName').value;
+            const phone = document.getElementById('tourPhone').value;
+            
+            if (!selectedTourDate) { showToast('Please select a date', 'error'); return; }
+            if (!selectedTourTime) { showToast('Please select a time', 'error'); return; }
+            if (!name) { showToast('Please enter your name', 'error'); return; }
+            if (!phone) { showToast('Please enter your phone', 'error'); return; }
+            
+            const tours = JSON.parse(localStorage.getItem('tenantTours') || '[]');
+            tours.push({
+                id: Date.now(),
+                property: currentTourProperty.title,
+                propertyId: currentTourProperty.id,
+                date: selectedTourDate,
+                time: selectedTourTime,
+                name, phone,
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('tenantTours', JSON.stringify(tours));
+            
+            document.getElementById('tourContent').style.display = 'none';
+            document.getElementById('tourSuccess').style.display = 'block';
+            document.getElementById('tourFooter').style.display = 'none';
+            showToast('Tour scheduled!', 'success');
+        }
+        
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function tenantLogout() { localStorage.removeItem('apartmentHubUser'); showToast('Logged out successfully', 'success'); setTimeout(() => window.location.href = 'index.html', 1000); }
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.style.cssText = 'position:fixed;bottom:30px;right:30px;padding:15px 25px;border-radius:8px;z-index:3000;background:' + (type === 'success' ? '#10b981' : '#ef4444') + ';color:white;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+    </script>
+</body>
+</html>

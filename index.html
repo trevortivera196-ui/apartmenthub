@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApartmentHub - Find Your Perfect Home</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="container">
+            <a href="#" class="logo">Apartment<span>Hub</span></a>
+            <nav class="nav">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="#listings" class="nav-link">Listings</a>
+                <a href="#vacancies" class="nav-link">Vacancies</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#contact" class="nav-link">Contact</a>
+                <div class="auth-buttons" id="authButtons">
+                    <button class="btn btn-outline" onclick="openLoginModal()">Login</button>
+                    <button class="btn btn-primary" onclick="openSignupModal()">Sign Up</button>
+                    <a href="admin-login.html" class="btn btn-outline" style="border-color: #6b7280; color: #6b7280;">Admin</a>
+                </div>
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">
+                        <span id="userInitial">T</span>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="tenant-dashboard.html" class="dropdown-item">📊 Dashboard</a>
+                        <a href="tenant-dashboard.html#saved" class="dropdown-item">❤️ Saved Listings</a>
+                        <a href="tenant-dashboard.html#tours" class="dropdown-item">📅 Tours</a>
+                        <a href="tenant-dashboard.html#messages" class="dropdown-item">💬 Messages</a>
+                        <hr>
+                        <a href="#" class="dropdown-item" onclick="logout()">🚪 Logout</a>
+                    </div>
+                </div>
+            </nav>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Find Your Perfect <span>Apartment</span></h1>
+                <p>Discover thousands of apartments, condos, and homes for rent. Your dream home is just a click away.</p>
+                
+                <!-- Search Box -->
+                <div class="search-box">
+                    <div class="search-group">
+                        <label>Location</label>
+                        <input type="text" id="location" placeholder="City, neighborhood, or address">
+                    </div>
+                    <div class="search-group">
+                        <label>Property Type</label>
+                        <select id="propertyType">
+                            <option value="">All Types</option>
+                            <option value="apartment">Apartment</option>
+                            <option value="condo">Condo</option>
+                            <option value="house">House</option>
+                            <option value="studio">Studio</option>
+                        </select>
+                    </div>
+                    <div class="search-group">
+                        <label>Price Range</label>
+                        <select id="priceRange">
+                            <option value="">Any Price</option>
+                            <option value="0-1000">$0 - $1,000</option>
+                            <option value="1000-1500">$1,000 - $1,500</option>
+                            <option value="1500-2000">$1,500 - $2,000</option>
+                            <option value="2000-2500">$2,000 - $2,500</option>
+                            <option value="2500+">$2,500+</option>
+                        </select>
+                    </div>
+                    <div class="search-group">
+                        <label>Bedrooms</label>
+                        <select id="bedrooms">
+                            <option value="">Any</option>
+                            <option value="studio">Studio</option>
+                            <option value="1">1 Bedroom</option>
+                            <option value="2">2 Bedrooms</option>
+                            <option value="3">3 Bedrooms</option>
+                            <option value="4+">4+ Bedrooms</option>
+                        </select>
+                    </div>
+                    <button class="search-btn" onclick="searchApartments()">Search</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Listings -->
+    <section id="listings" class="listings">
+        <div class="container">
+            <h2 class="section-title">Featured Apartments</h2>
+            <p class="section-subtitle">Explore our handpicked selection of premium rentals</p>
+            
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-btn active" onclick="filterListings('all')">All</button>
+                <button class="filter-btn" onclick="filterListings('apartment')">Apartments</button>
+                <button class="filter-btn" onclick="filterListings('condo')">Condos</button>
+                <button class="filter-btn" onclick="filterListings('house')">Houses</button>
+            </div>
+
+            <!-- Listings Grid -->
+            <div class="listings-grid" id="listingsGrid">
+                <!-- Listings will be inserted by JavaScript -->
+            </div>
+
+            <!-- View All Button -->
+            <div class="view-all-container">
+                <button class="btn btn-primary" onclick="viewAllListings()">View All Listings</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vacancies Section -->
+    <section id="vacancies" class="vacancies">
+        <div class="container">
+            <h2 class="section-title">Vacant Rooms</h2>
+            <p class="section-subtitle">Available rooms ready for immediate move-in</p>
+            
+            <!-- Vacancy Stats -->
+            <div class="vacancy-stats">
+                <div class="vacancy-stat">
+                    <span class="stat-number" id="totalVacancies">12</span>
+                    <span class="stat-label">Total Vacancies</span>
+                </div>
+                <div class="vacancy-stat">
+                    <span class="stat-number" id="availableNow">8</span>
+                    <span class="stat-label">Available Now</span>
+                </div>
+                <div class="vacancy-stat">
+                    <span class="stat-number">$850</span>
+                    <span class="stat-label">Starting Price</span>
+                </div>
+            </div>
+            
+            <!-- Price Filter -->
+            <div class="price-filter">
+                <label>Filter by Price:</label>
+                <div class="price-buttons">
+                    <button class="price-btn active" onclick="filterVacancies('all')">All</button>
+                    <button class="price-btn" onclick="filterVacancies('0-1000')">Under $1,000</button>
+                    <button class="price-btn" onclick="filterVacancies('1000-1500')">$1,000 - $1,500</button>
+                    <button class="price-btn" onclick="filterVacancies('1500-2000')">$1,500 - $2,000</button>
+                    <button class="price-btn" onclick="filterVacancies('2000+')">$2,000+</button>
+                </div>
+            </div>
+            
+            <!-- Vacancies Grid -->
+            <div class="vacancies-grid" id="vacanciesGrid">
+                <!-- Vacancies will be inserted by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose ApartmentHub?</h2>
+            <p class="section-subtitle">We make finding your perfect home simple and stress-free</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Easy Search</h3>
+                    <p>Filter by price, location, amenities, and more to find exactly what you're looking for.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📍</div>
+                    <h3>Virtual Tours</h3>
+                    <p>Explore properties from the comfort of your home with our 360° virtual tours.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Verified Listings</h3>
+                    <p>All our listings are verified by our team to ensure accuracy and prevent scams.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Friendly</h3>
+                    <p>Browse apartments on any device, anytime, anywhere.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Alerts & Updates</h3>
+                    <p>Get notified when new listings match your saved search criteria.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Direct Contact</h3>
+                    <p>Connect directly with landlords and property managers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Finding your perfect apartment in 3 simple steps</p>
+            
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Search</h3>
+                    <p>Use our powerful search tools to find apartments that match your criteria.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Tour</h3>
+                    <p>Schedule in-person or virtual tours with property managers.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Apply</h3>
+                    <p>Submit your application directly through our secure platform.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>About ApartmentHub</h2>
+                    <p>Founded in 2020, ApartmentHub has helped over 100,000 tenants find their perfect home. We believe that finding a place to live should be exciting, not stressful.</p>
+                    <p>Our platform connects renters directly with property owners and managers, eliminating unnecessary middlemen and making the process more transparent.</p>
+                    
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="stat-number">10,000+</span>
+                            <span class="stat-label">Active Listings</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">50,000+</span>
+                            <span class="stat-label">Happy Tenants</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">500+</span>
+                            <span class="stat-label">Cities Covered</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="about-img-placeholder">🏠</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="container">
+            <h2 class="section-title">What Our Tenants Say</h2>
+            <p class="section-subtitle">Real stories from people who found their home with us</p>
+            
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">★★★★★</div>
+                    <p>"Found my dream apartment in just 3 days! The virtual tour feature saved me so much time."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">JD</div>
+                        <div class="author-info">
+                            <strong>Jane Doe</strong>
+                            <span>Software Engineer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">★★★★★</div>
+                    <p>"The search filters are amazing. I was able to find a pet-friendly place within my budget quickly."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">MS</div>
+                        <div class="author-info">
+                            <strong>Mike Smith</strong>
+                            <span>Marketing Manager</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">★★★★★</div>
+                    <p>"Super easy process from search to application. Highly recommend for anyone looking to rent!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SC</div>
+                        <div class="author-info">
+                            <strong>Sarah Chen</strong>
+                            <span>Graduate Student</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h2>Get In Touch</h2>
+                    <p>Have questions? We're here to help you find your perfect home.</p>
+                    
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <span class="contact-icon">📍</span>
+                            <div>
+                                <strong>Address</strong>
+                                <p>123 Apartment Street, New York, NY 10001</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">📞</span>
+                            <div>
+                                <strong>Phone</strong>
+                                <p>(555) 123-4567</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">✉️</span>
+                            <div>
+                                <strong>Email</strong>
+                                <p>hello@apartmenthub.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">🕐</span>
+                            <div>
+                                <strong>Hours</strong>
+                                <p>Mon-Fri: 9AM - 6PM, Sat: 10AM - 4PM</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form class="contact-form" onsubmit="submitContactForm(event)">
+                    <h3>Send us a Message</h3>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="john@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <select required>
+                            <option value="">Select a subject</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="listing">Report a Listing</option>
+                            <option value="support">Technical Support</option>
+                            <option value="partnership">Partnership</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea rows="5" placeholder="How can we help you?" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>ApartmentHub</h3>
+                    <p>Your trusted partner in finding the perfect rental home.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">f</a>
+                        <a href="#" class="social-link">t</a>
+                        <a href="#" class="social-link">in</a>
+                        <a href="#" class="social-link">ig</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <a href="#home">Home</a>
+                    <a href="#listings">Listings</a>
+                    <a href="#about">About Us</a>
+                    <a href="#contact">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Property Types</h4>
+                    <a href="#">Apartments</a>
+                    <a href="#">Condos</a>
+                    <a href="#">Houses</a>
+                    <a href="#">Studios</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <a href="#">Rental Guide</a>
+                    <a href="#">Application Tips</a>
+                    <a href="#">Moving Checklist</a>
+                    <a href="#">FAQ</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ApartmentHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Property Modal -->
+    <div id="propertyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modalBody">
+                <!-- Modal content will be inserted by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content auth-modal">
+            <span class="close-btn" onclick="closeLoginModal()">&times;</span>
+            <div class="auth-modal-body">
+                <div class="auth-header">
+                    <h2>Welcome Back</h2>
+                    <p>Login to access your account</p>
+                </div>
+                
+                <div class="social-login">
+                    <button class="social-btn google">
+                        <span>G</span> Continue with Google
+                    </button>
+                    <button class="social-btn facebook">
+                        <span>f</span> Continue with Facebook
+                    </button>
+                    <button class="social-btn apple">
+                        <span>🍎</span> Continue with Apple
+                    </button>
+                </div>
+                
+                <div class="divider">
+                    <span>or login with email</span>
+                </div>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="tenant@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Login</button>
+                </form>
+                
+                <p class="auth-footer">
+                    Don't have an account? <a href="#" onclick="switchToSignup()">Sign up</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content auth-modal">
+            <span class="close-btn" onclick="closeSignupModal()">&times;</span>
+            <div class="auth-modal-body">
+                <div class="auth-header">
+                    <h2>Create Account</h2>
+                    <p>Join thousands of happy tenants</p>
+                </div>
+                
+                <div class="social-login">
+                    <button class="social-btn google">
+                        <span>G</span> Continue with Google
+                    </button>
+                    <button class="social-btn facebook">
+                        <span>f</span> Continue with Facebook
+                    </button>
+                    <button class="social-btn apple">
+                        <span>🍎</span> Continue with Apple
+                    </button>
+                </div>
+                
+                <div class="divider">
+                    <span>or sign up with email</span>
+                </div>
+                
+                <form id="signupForm" onsubmit="handleSignup(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" id="firstName" placeholder="John" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" id="lastName" placeholder="Doe" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signupEmail" placeholder="tenant@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" placeholder="Create a password" required minlength="8">
+                        <small>At least 8 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="agreeTerms" required>
+                            <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                </form>
+                
+                <p class="auth-footer">
+                    Already have an account? <a href="#" onclick="switchToLogin()">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Tour Modal -->
+    <div id="tourModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-btn" onclick="closeTourModal()">&times;</span>
+            <div class="auth-header">
+                <h2>📅 Schedule a Tour</h2>
+                <p>Book a viewing for your favorite property</p>
+            </div>
+            <div id="tourPropertyInfo" style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;">
+                <h4 id="tourPropertyTitle" style="margin: 0 0 5px;"></h4>
+                <p id="tourPropertyAddress" style="margin: 0; font-size: 0.9rem; color: #6b7280;"></p>
+            </div>
+            <div class="form-group">
+                <label>Select a Date</label>
+                <div id="tourDateGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+            </div>
+            <div class="form-group">
+                <label>Available Time Slots</label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <button type="button" class="tour-time-btn" onclick="selectTourTime(this, '9:00 AM')" style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer;">9:00 AM</button>
+                    <button type="button" class="tour-time-btn" onclick="selectTourTime(this, '10:00 AM')" style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer;">10:00 AM</button>
+                    <button type="button" class="tour-time-btn" onclick="selectTourTime(this, '11:00 AM')" style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer;">11:00 AM</button>
+                    <button type="button" class="tour-time-btn" onclick="selectTourTime(this, '12:00 PM')" style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer;">12:00 PM</button>
+                    <button type="button" class="tour-time-btn" onclick="selectTourTime(this, '2:00 PM')" style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer;">2:00 PM</button>
+                    <button type="button" class="tour-time-btn" onclick="selectTourTime(this, '4:00 PM')" style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer;">4:00 PM</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" id="tourName" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="tourPhone" placeholder="(555) 123-4567">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="tourEmail" placeholder="john@example.com">
+            </div>
+            <button type="button" class="btn btn-primary btn-full" onclick="submitTour()">Confirm Tour</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let currentTourProperty = null;
+        let selectedTourDate = null;
+        let selectedTourTime = null;
+
+        function openTourModal(id) {
+            const listing = listings.find(l => l.id === id);
+            if (!listing) return;
+            
+            currentTourProperty = listing;
+            document.getElementById('tourPropertyInfo').style.display = 'block';
+            document.getElementById('tourPropertyTitle').textContent = listing.title;
+            document.getElementById('tourPropertyAddress').textContent = listing.address + ' - $' + listing.price.toLocaleString() + '/mo';
+            document.getElementById('tourModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            initTourCalendar();
+            
+            // Pre-fill if logged in
+            const savedUser = localStorage.getItem('apartmentHubUser');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                document.getElementById('tourName').value = (user.firstName || '') + ' ' + (user.lastName || '');
+                document.getElementById('tourEmail').value = user.email || '';
+            }
+        }
+
+        function closeTourModal() {
+            document.getElementById('tourModal').style.display = 'none';
+            document.body.style.overflow = '';
+            currentTourProperty = null;
+            selectedTourDate = null;
+            selectedTourTime = null;
+        }
+
+        function initTourCalendar() {
+            const grid = document.getElementById('tourDateGrid');
+            const today = new Date();
+            const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+            let html = '';
+            for (let i = 1; i <= 14; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const dayName = days[date.getDay()];
+                const dayNum = date.getDate();
+                const month = date.getMonth() + 1;
+                const dateStr = date.getFullYear() + '-' + String(month).padStart(2, '0') + '-' + String(dayNum).padStart(2, '0');
+                html += '<button type="button" class="tour-date-btn" onclick="selectTourDate(\'' + dateStr + '\', this)" style="padding: 8px 4px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; text-align: center;"><div style="font-size: 0.7rem;">' + dayName + '</div><div style="font-weight: 600;">' + dayNum + '</div></button>';
+            }
+            grid.innerHTML = html;
+        }
+
+        function selectTourDate(dateStr, element) {
+            selectedTourDate = dateStr;
+            document.querySelectorAll('#tourDateGrid .tour-date-btn').forEach(d => d.style.borderColor = '#e5e7eb');
+            element.style.borderColor = '#2563eb';
+            element.style.background = '#eff6ff';
+        }
+
+        function selectTourTime(element, time) {
+            selectedTourTime = time;
+            document.querySelectorAll('.tour-time-btn').forEach(s => {
+                s.style.borderColor = '#e5e7eb';
+                s.style.background = 'white';
+            });
+            element.style.borderColor = '#2563eb';
+            element.style.background = '#eff6ff';
+        }
+
+        function submitTour() {
+            const name = document.getElementById('tourName').value;
+            const phone = document.getElementById('tourPhone').value;
+            const email = document.getElementById('tourEmail').value;
+            
+            if (!selectedTourDate) { showToast('Please select a date', 'error'); return; }
+            if (!selectedTourTime) { showToast('Please select a time', 'error'); return; }
+            if (!name) { showToast('Please enter your name', 'error'); return; }
+            if (!phone) { showToast('Please enter your phone', 'error'); return; }
+            if (!email) { showToast('Please enter your email', 'error'); return; }
+            
+            // Save tour
+            const tours = JSON.parse(localStorage.getItem('tenantTours') || '[]');
+            tours.push({
+                id: Date.now(),
+                property: currentTourProperty.title,
+                propertyId: currentTourProperty.id,
+                address: currentTourProperty.address,
+                price: currentTourProperty.price,
+                date: selectedTourDate,
+                time: selectedTourTime,
+                name, phone, email,
+                status: 'confirmed',
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('tenantTours', JSON.stringify(tours));
+            
+            showToast('Tour scheduled successfully!', 'success');
+            closeTourModal();
+        }
+
+        // Close modal on outside click
+        document.getElementById('tourModal').addEventListener('click', function(e) {
+            if (e.target === this) closeTourModal();
+        });
+
+        // Add tour buttons to listings
+        function createListingCard(listing) {
+            const bedsText = listing.beds === 0 ? 'Studio' : (listing.beds === 1 ? '1 Bed' : listing.beds + ' Beds');
+            const isSaved = isListingSaved(listing.id);
+            
+            return `
+                <div class="listing-card" data-id="${listing.id}">
+                    <div class="listing-image">
+                        🏠
+                        ${listing.featured ? '<span class="listing-badge">Featured</span>' : ''}
+                        <button class="listing-favorite" style="color: ${isSaved ? 'red' : ''}" onclick="event.stopPropagation(); toggleFavorite(${listing.id})">
+                            ♥
+                        </button>
+                    </div>
+                    <div class="listing-content">
+                        <div class="listing-price">$${listing.price.toLocaleString()}<span>/month</span></div>
+                        <h3 class="listing-title">${listing.title}</h3>
+                        <div class="listing-address">📍 ${listing.address}</div>
+                        <div class="listing-features">
+                            <span class="listing-feature">🛏️ ${bedsText}</span>
+                            <span class="listing-feature">🚿 ${listing.baths} Bath${listing.baths > 1 ? 's' : ''}</span>
+                            <span class="listing-feature">📐 ${listing.sqft.toLocaleString()} sqft</span>
+                        </div>
+                        <div class="listing-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button class="listing-btn secondary" onclick="event.stopPropagation(); openTourModal(${listing.id})" style="flex: 1; padding: 10px; border-radius: 8px; font-size: 0.9rem; cursor: pointer;">📅 Tour</button>
+                            <button class="listing-btn primary" onclick="event.stopPropagation(); contactAgent(${listing.id})" style="flex: 1; padding: 10px; border-radius: 8px; font-size: 0.9rem; cursor: pointer;">Contact</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Listings - ApartmentHub</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tenant-wrapper { display: flex; min-height: 100vh; }
+        .tenant-sidebar { width: 260px; background: #1f2937; color: white; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
+        .tenant-sidebar-header { padding: 25px 20px; border-bottom: 1px solid #374151; }
+        .tenant-sidebar-header .logo { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 5px; }
+        .tenant-sidebar-header .logo span { color: #60a5fa; }
+        .tenant-sidebar-header p { font-size: 0.85rem; color: #9ca3af; }
+        .tenant-sidebar-nav { padding: 20px 0; }
+        .nav-section { margin-bottom: 25px; }
+        .nav-section-title { padding: 0 20px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 10px; }
+        .tenant-sidebar-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #d1d5db; text-decoration: none; transition: var(--transition); cursor: pointer; border-left: 3px solid transparent; }
+        .tenant-sidebar-link:hover, .tenant-sidebar-link.active { background: #374151; color: white; border-left-color: #60a5fa; }
+        .tenant-sidebar-link .icon { font-size: 1.2rem; width: 24px; text-align: center; }
+        .tenant-sidebar-link .badge { margin-left: auto; background: var(--primary-color); color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; }
+        .tenant-sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; border-top: 1px solid #374151; background: #1f2937; }
+        .tenant-user { display: flex; align-items: center; gap: 12px; }
+        .tenant-avatar { width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .tenant-info strong { display: block; font-size: 0.9rem; }
+        .tenant-info span { font-size: 0.8rem; color: #9ca3af; }
+        .tenant-main { flex: 1; margin-left: 260px; background: #f3f4f6; }
+        .tenant-header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 50; }
+        .tenant-header h1 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 3px; }
+        .tenant-header p { font-size: 0.9rem; color: var(--text-light); }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .header-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f3f4f6; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: var(--transition); position: relative; }
+        .tenant-content { padding: 30px; }
+        
+        /* Search Section */
+        .search-section { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .search-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+        .search-group { flex: 1; min-width: 200px; }
+        .search-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-dark); font-size: 0.9rem; }
+        .search-group input, .search-group select { width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.95rem; transition: var(--transition); }
+        .search-group input:focus, .search-group select:focus { outline: none; border-color: var(--primary-color); }
+        .search-btn { padding: 12px 30px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: var(--transition); }
+        .search-btn:hover { background: var(--primary-dark); }
+        
+        /* Filter Tabs */
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .filter-tab { padding: 10px 20px; background: white; border: 2px solid #e5e7eb; border-radius: 25px; font-size: 0.9rem; cursor: pointer; transition: var(--transition); }
+        .filter-tab:hover, .filter-tab.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        
+        /* Listings Grid */
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+        .listing-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: var(--transition); cursor: pointer; }
+        .listing-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .listing-image { position: relative; height: 180px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; }
+        .listing-badge { position: absolute; top: 12px; left: 12px; padding: 4px 10px; background: #10b981; color: white; border-radius: 15px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .listing-favorite { position: absolute; top: 12px; right: 12px; width: 35px; height: 35px; background: rgba(255,255,255,0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 1.2rem; transition: var(--transition); }
+        .listing-favorite:hover { transform: scale(1.1); }
+        .listing-favorite.saved { color: #ef4444; }
+        .listing-content { padding: 20px; }
+        .listing-price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin-bottom: 5px; }
+        .listing-price span { font-size: 0.9rem; font-weight: 400; color: #6b7280; }
+        .listing-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: #1f2937; }
+        .listing-address { color: #6b7280; font-size: 0.9rem; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        .listing-features { display: flex; gap: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; }
+        .listing-feature { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; color: #6b7280; }
+        .listing-actions { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; }
+        .listing-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: var(--transition); text-align: center; }
+        .listing-btn.primary { background: var(--primary-color); color: white; border: none; }
+        .listing-btn.primary:hover { background: var(--primary-dark); }
+        .listing-btn.secondary { background: white; color: var(--primary-color); border: 2px solid var(--primary-color); }
+        .listing-btn.secondary:hover { background: var(--primary-color); color: white; }
+        
+        .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 20px; background: none; border: none; color: #f87171; cursor: pointer; font-size: 0.95rem; transition: var(--transition); margin-top: 10px; }
+        .logout-btn:hover { background: #374151; }
+        
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 16px; width: 90%; max-width: 550px; max-height: 90vh; overflow-y: auto; animation: modalSlide 0.3s ease; }
+        @keyframes modalSlide { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header { padding: 25px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 1.3rem; font-weight: 600; color: #1f2937; margin: 0; }
+        .modal-close { width: 36px; height: 36px; border-radius: 50%; border: none; background: #f3f4f6; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .modal-close:hover { background: #e5e7eb; }
+        .modal-body { padding: 25px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #374151; font-size: 0.95rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.95rem; transition: var(--transition); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-color); }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-checkbox { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+        .form-checkbox input { width: auto; margin-top: 3px; }
+        .form-checkbox span { font-size: 0.85rem; color: #6b7280; }
+        .modal-footer { padding: 20px 25px; border-top: 1px solid #e5e7eb; display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-btn { padding: 12px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: var(--transition); }
+        .modal-btn.secondary { background: white; border: 2px solid #e5e7eb; color: #374151; }
+        .modal-btn.secondary:hover { border-color: #d1d5db; background: #f9fafb; }
+        .modal-btn.primary { background: var(--primary-color); border: none; color: white; }
+        .modal-btn.primary:hover { background: var(--primary-dark); }
+        
+        /* Tour Calendar Styles */
+        .tour-calendar { margin-top: 15px; }
+        .tour-date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; }
+        .tour-date { padding: 10px 5px; text-align: center; border-radius: 8px; cursor: pointer; transition: var(--transition); border: 2px solid transparent; }
+        .tour-date:hover { background: #f3f4f6; }
+        .tour-date.selected { background: var(--primary-color); color: white; }
+        .tour-date.disabled { opacity: 0.4; cursor: not-allowed; }
+        .tour-date .day-name { font-size: 0.75rem; font-weight: 500; }
+        .tour-date .day-num { font-size: 1.1rem; font-weight: 600; }
+        .tour-time-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .tour-time-slot { padding: 12px; text-align: center; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: var(--transition); }
+        .tour-time-slot:hover { border-color: var(--primary-color); }
+        .tour-time-slot.selected { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+        .tour-property-preview { background: #f9fafb; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .tour-property-preview h4 { margin: 0 0 5px; color: #1f2937; }
+        .tour-property-preview p { margin: 0; font-size: 0.85rem; color: #6b7280; }
+        
+        /* Success Message */
+        .application-success { text-align: center; padding: 30px 20px; }
+        .success-icon { width: 80px; height: 80px; background: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2.5rem; }
+        .application-success h3 { color: #059669; margin-bottom: 10px; }
+        .application-success p { color: #6b7280; font-size: 0.95rem; margin-bottom: 20px; }
+        
+        .mobile-menu-toggle { display: none; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--primary-color); color: white; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 200; }
+        @media (max-width: 992px) { .tenant-sidebar { transform: translateX(-100%); } .tenant-sidebar.show { transform: translateX(0); } .tenant-main { margin-left: 0; } .mobile-menu-toggle { display: flex; align-items: center; justify-content: center; } }
+        @media (max-width: 768px) { .tenant-content { padding: 15px; } .search-row { flex-direction: column; } .search-group { min-width: 100%; } .listings-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="tenant-wrapper">
+        <aside class="tenant-sidebar" id="sidebar">
+            <div class="tenant-sidebar-header">
+                <div class="logo">Apartment<span>Hub</span></div>
+                <p>Tenant Portal</p>
+            </div>
+            <nav class="tenant-sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="tenant-dashboard.html" class="tenant-sidebar-link">
+                        <span class="icon">📊</span>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Search</div>
+                    <a href="tenant-listings.html" class="tenant-sidebar-link active">
+                        <span class="icon">🔍</span>
+                        Browse Listings
+                    </a>
+                    <a href="tenant-vacancies.html" class="tenant-sidebar-link">
+                        <span class="icon">🚪</span>
+                        Vacancies
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">My Account</div>
+                    <a href="tenant-dashboard.html#saved" class="tenant-sidebar-link">
+                        <span class="icon">❤️</span>
+                        Saved Listings
+                        <span class="badge" id="savedCount">0</span>
+                    </a>
+                    <a href="tenant-dashboard.html#tours" class="tenant-sidebar-link">
+                        <span class="icon">📅</span>
+                        Tours
+                    </a>
+                    <a href="tenant-messages.html" class="tenant-sidebar-link">
+                        <span class="icon">💬</span>
+                        Messages
+                        <span class="badge">2</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="tenant-sidebar-footer">
+                <div class="tenant-user">
+                    <div class="tenant-avatar" id="userInitial">T</div>
+                    <div class="tenant-info">
+                        <strong id="userName">Tenant</strong>
+                        <span id="userEmail">tenant@example.com</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="tenantLogout()">
+                    <span>🚪</span> Logout
+                </button>
+            </div>
+        </aside>
+        <main class="tenant-main">
+            <header class="tenant-header">
+                <div class="header-left">
+                    <h1>Browse Listings</h1>
+                    <p>Find your perfect apartment from our available listings</p>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" onclick="toggleSidebar()">☰</button>
+                </div>
+            </header>
+            <div class="tenant-content">
+                <!-- Search Section -->
+                <div class="search-section">
+                    <div class="search-row">
+                        <div class="search-group">
+                            <label>Location</label>
+                            <input type="text" id="searchLocation" placeholder="City, neighborhood, or address">
+                        </div>
+                        <div class="search-group">
+                            <label>Property Type</label>
+                            <select id="searchType">
+                                <option value="">All Types</option>
+                                <option value="apartment">Apartment</option>
+                                <option value="condo">Condo</option>
+                                <option value="house">House</option>
+                                <option value="studio">Studio</option>
+                            </select>
+                        </div>
+                        <div class="search-group">
+                            <label>Price Range</label>
+                            <select id="searchPrice">
+                                <option value="">Any Price</option>
+                                <option value="0-1000">$0 - $1,000</option>
+                                <option value="1000-1500">$1,000 - $1,500</option>
+                                <option value="1500-2000">$1,500 - $2,000</option>
+                                <option value="2000-2500">$2,000 - $2,500</option>
+                                <option value="2500+">$2,500+</option>
+                            </select>
+                        </div>
+                        <div class="search-group">
+                            <label>Bedrooms</label>
+                            <select id="searchBeds">
+                                <option value="">Any</option>
+                                <option value="studio">Studio</option>
+                                <option value="1">1 Bedroom</option>
+                                <option value="2">2 Bedrooms</option>
+                                <option value="3">3 Bedrooms</option>
+                                <option value="4">4+ Bedrooms</option>
+                            </select>
+                        </div>
+                        <button class="search-btn" onclick="searchListings()">Search</button>
+                    </div>
+                </div>
+                
+                <!-- Filter Tabs -->
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="filterType('all', this)">All</button>
+                    <button class="filter-tab" onclick="filterType('apartment', this)">Apartments</button>
+                    <button class="filter-tab" onclick="filterType('condo', this)">Condos</button>
+                    <button class="filter-tab" onclick="filterType('house', this)">Houses</button>
+                    <button class="filter-tab" onclick="filterType('studio', this)">Studios</button>
+                </div>
+                
+                <!-- Listings Count -->
+                <p style="margin-bottom: 20px; color: #6b7280;" id="resultsCount">Showing all listings</p>
+                
+                <!-- Listings Grid -->
+                <div class="listings-grid" id="listingsGrid"></div>
+            </div>
+        </main>
+    </div>
+    
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <!-- Application Modal -->
+    <div class="modal-overlay" id="applicationModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📝 Submit Application</h2>
+                <button class="modal-close" onclick="closeApplicationModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="applicationContent">
+                    <div id="appPropertyInfo" class="tour-property-preview" style="display: none; margin-bottom: 20px;">
+                        <h4 id="appPropertyTitle"></h4>
+                        <p id="appPropertyAddress"></p>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" id="appFirstName" placeholder="John">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" id="appLastName" placeholder="Doe">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="appEmail" placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="appPhone" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Move-in Date</label>
+                            <input type="date" id="appMoveIn">
+                        </div>
+                        <div class="form-group">
+                            <label>Lease Term</label>
+                            <select id="appLeaseTerm">
+                                <option value="6">6 Months</option>
+                                <option value="12" selected>12 Months</option>
+                                <option value="24">24 Months</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Income ($)</label>
+                        <input type="number" id="appIncome" placeholder="50000">
+                    </div>
+                    <div class="form-group">
+                        <label>Employer</label>
+                        <input type="text" id="appEmployer" placeholder="Company Name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="appTerms">
+                            <span>I authorize a background/credit check and verify all information is accurate.</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="applicationSuccess" class="application-success" style="display: none;">
+                    <div class="success-icon">✓</div>
+                    <h3>Application Submitted!</h3>
+                    <p>The property manager will review your application and contact you within 24-48 hours.</p>
+                </div>
+            </div>
+            <div class="modal-footer" id="applicationFooter">
+                <button class="modal-btn secondary" onclick="closeApplicationModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="submitApplication()">Submit Application</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tour Modal -->
+    <div class="modal-overlay" id="tourModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📅 Schedule a Tour</h2>
+                <button class="modal-close" onclick="closeTourModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="tourContent">
+                    <div id="tourPropertyInfo" class="tour-property-preview" style="display: none; margin-bottom: 20px;">
+                        <h4 id="tourPropertyTitle"></h4>
+                        <p id="tourPropertyAddress"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Select a Date</label>
+                        <div class="tour-calendar">
+                            <div class="tour-date-grid" id="tourDateGrid"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Time Slots</label>
+                        <div class="tour-time-slots" id="tourTimeSlots">
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '9:00 AM')">9:00 AM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '10:00 AM')">10:00 AM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '11:00 AM')">11:00 AM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '12:00 PM')">12:00 PM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '1:00 PM')">1:00 PM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '2:00 PM')">2:00 PM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '3:00 PM')">3:00 PM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '4:00 PM')">4:00 PM</div>
+                            <div class="tour-time-slot" onclick="selectTimeSlot(this, '5:00 PM')">5:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" id="tourName" placeholder="Full Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="tourPhone" placeholder="(555) 123-4567">
+                    </div>
+                </div>
+                <div id="tourSuccess" class="application-success" style="display: none;">
+                    <div class="success-icon">✓</div>
+                    <h3>Tour Scheduled!</h3>
+                    <p>You will receive a confirmation email with all the tour details.</p>
+                </div>
+            </div>
+            <div class="modal-footer" id="tourFooter">
+                <button class="modal-btn secondary" onclick="closeTourModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="submitTour()">Confirm Tour</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Listings Data
+        const listingsData = [
+            { id: 1, title: "Modern Downtown Apartment", type: "apartment", price: 1850, address: "123 Main Street, Downtown", beds: 2, baths: 2, sqft: 1100, featured: true, description: "Stunning modern apartment in the heart of downtown." },
+            { id: 2, title: "Cozy Studio near Campus", type: "studio", price: 1200, address: "456 College Ave, University District", beds: 0, baths: 1, sqft: 450, featured: true, description: "Perfect studio for students or young professionals." },
+            { id: 3, title: "Luxury Waterfront Condo", type: "condo", price: 3200, address: "789 Harbor View, Marina District", beds: 3, baths: 2, sqft: 1800, featured: true, description: "Breathtaking waterfront condo with panoramic bay views." },
+            { id: 4, title: "Spacious Family Home", type: "house", price: 2800, address: "321 Oak Lane, Suburbs", beds: 4, baths: 3, sqft: 2400, featured: true, description: "Beautiful family home in a quiet neighborhood." },
+            { id: 5, title: "Urban Loft with City Views", type: "apartment", price: 2200, address: "555 Industrial Blvd, Arts District", beds: 1, baths: 1, sqft: 950, featured: false, description: "Stylish loft in converted warehouse." },
+            { id: 6, title: "Garden Level Apartment", type: "apartment", price: 1650, address: "777 Garden Court, Midtown", beds: 2, baths: 1, sqft: 850, featured: false, description: "Charming garden-level apartment with private patio." },
+            { id: 7, title: "High-Rise Executive Suite", type: "condo", price: 3800, address: "999 Sky Tower, Financial District", beds: 2, baths: 2, sqft: 1400, featured: true, description: "Executive living at its finest." },
+            { id: 8, title: "Affordable 2BR Apartment", type: "apartment", price: 1400, address: "234 Elm Street, Eastside", beds: 2, baths: 1, sqft: 780, featured: false, description: "Great value 2-bedroom apartment." },
+            { id: 9, title: "Pet-Friendly Townhouse", type: "house", price: 2400, address: "567 Pine Road, Westside", beds: 3, baths: 2, sqft: 1650, featured: false, description: "Spacious townhouse perfect for pet owners." }
+        ];
+        
+        let currentFilter = 'all';
+        let currentUser = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedUser = localStorage.getItem('apartmentHubUser');
+            if (!savedUser) { window.location.href = 'index.html'; return; }
+            
+            currentUser = JSON.parse(savedUser);
+            document.getElementById('userName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('userInitial').textContent = currentUser.firstName.charAt(0).toUpperCase();
+            
+            updateSavedCount();
+            renderListings(listingsData);
+        });
+        
+        function getSavedListings() {
+            return JSON.parse(localStorage.getItem('savedListings') || '[]');
+        }
+        
+        function updateSavedCount() {
+            const count = getSavedListings().length;
+            document.getElementById('savedCount').textContent = count;
+        }
+        
+        function isSaved(id) {
+            return getSavedListings().includes(id);
+        }
+        
+        function toggleSave(id) {
+            if (!currentUser) { showToast('Please login to save listings', 'error'); return; }
+            
+            let saved = getSavedListings();
+            const btn = document.querySelector(`[data-save-id="${id}"]`);
+            
+            if (saved.includes(id)) {
+                saved = saved.filter(s => s !== id);
+                if (btn) btn.classList.remove('saved');
+                showToast('Removed from saved', 'success');
+            } else {
+                saved.push(id);
+                if (btn) btn.classList.add('saved');
+                showToast('Listing saved!', 'success');
+            }
+            
+            localStorage.setItem('savedListings', JSON.stringify(saved));
+            updateSavedCount();
+        }
+        
+        function renderListings(listings) {
+            const grid = document.getElementById('listingsGrid');
+            document.getElementById('resultsCount').textContent = `Showing ${listings.length} listings`;
+            
+            grid.innerHTML = listings.map(item => `
+                <div class="listing-card" onclick="viewListing(${item.id})">
+                    <div class="listing-image">
+                        🏠
+                        ${item.featured ? '<span class="listing-badge">Featured</span>' : ''}
+                        <button class="listing-favorite ${isSaved(item.id) ? 'saved' : ''}" data-save-id="${item.id}" onclick="event.stopPropagation(); toggleSave(${item.id})">
+                            ♥
+                        </button>
+                    </div>
+                    <div class="listing-content">
+                        <div class="listing-price">$${item.price.toLocaleString()}<span>/month</span></div>
+                        <h3 class="listing-title">${item.title}</h3>
+                        <div class="listing-address">📍 ${item.address}</div>
+                        <div class="listing-features">
+                            <span class="listing-feature">🛏️ ${item.beds === 0 ? 'Studio' : item.beds + ' Bed'}</span>
+                            <span class="listing-feature">🚿 ${item.baths} Bath</span>
+                            <span class="listing-feature">📐 ${item.sqft.toLocaleString()} sqft</span>
+                        </div>
+                        <div class="listing-actions">
+                            <button class="listing-btn secondary" onclick="event.stopPropagation(); scheduleTour(${item.id})">📅 Tour</button>
+                            <button class="listing-btn primary" onclick="event.stopPropagation(); applyNow(${item.id})">Apply Now</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterType(type, btn) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            
+            let filtered = type === 'all' ? listingsData : listingsData.filter(l => l.type === type);
+            renderListings(filtered);
+        }
+        
+        function searchListings() {
+            const location = document.getElementById('searchLocation').value.toLowerCase();
+            const type = document.getElementById('searchType').value;
+            const price = document.getElementById('searchPrice').value;
+            const beds = document.getElementById('searchBeds').value;
+            
+            let filtered = listingsData;
+            
+            if (location) {
+                filtered = filtered.filter(l => l.address.toLowerCase().includes(location) || l.title.toLowerCase().includes(location));
+            }
+            if (type) filtered = filtered.filter(l => l.type === type);
+            if (price) {
+                const [min, max] = price.split('-').map(p => p.replace('+', ''));
+                if (price.endsWith('+')) filtered = filtered.filter(l => l.price >= parseInt(min));
+                else filtered = filtered.filter(l => l.price >= parseInt(min) && l.price <= parseInt(max));
+            }
+            if (beds) {
+                if (beds === 'studio') filtered = filtered.filter(l => l.beds === 0);
+                else if (beds === '4') filtered = filtered.filter(l => l.beds >= 4);
+                else filtered = filtered.filter(l => l.beds === parseInt(beds));
+            }
+            
+            renderListings(filtered);
+        }
+        
+        function viewListing(id) {
+            const item = listingsData.find(l => l.id === id);
+            if (item) alert(`🏠 ${item.title}\n\nAddress: ${item.address}\nPrice: $${item.price}/month\nBeds: ${item.beds}\nBaths: ${item.baths}\nSq Ft: ${item.sqft}\n\n${item.description}`);
+        }
+        
+        function scheduleTour(id) {
+            const item = listingsData.find(l => l.id === id);
+            if (!currentUser) { showToast('Please login to schedule a tour', 'error'); return; }
+            openTourModal(item);
+        }
+        
+        function applyNow(id) {
+            const item = listingsData.find(l => l.id === id);
+            if (!currentUser) { showToast('Please login to apply', 'error'); return; }
+            openApplicationModal(item);
+        }
+        
+        // ==================== APPLICATION MODAL ====================
+        let currentApplicationProperty = null;
+        
+        function openApplicationModal(item) {
+            currentApplicationProperty = item;
+            document.getElementById('appPropertyInfo').style.display = 'block';
+            document.getElementById('appPropertyTitle').textContent = item.title;
+            document.getElementById('appPropertyAddress').textContent = item.address + ' - $' + item.price.toLocaleString() + '/mo';
+            document.getElementById('applicationContent').style.display = 'block';
+            document.getElementById('applicationSuccess').style.display = 'none';
+            document.getElementById('applicationFooter').style.display = 'flex';
+            document.getElementById('applicationModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // Pre-fill user info
+            if (currentUser) {
+                const names = (currentUser.firstName || '').split(' ');
+                document.getElementById('appFirstName').value = names[0] || '';
+                document.getElementById('appLastName').value = names[1] || '';
+                document.getElementById('appEmail').value = currentUser.email || '';
+            }
+        }
+        
+        function closeApplicationModal() {
+            document.getElementById('applicationModal').classList.remove('show');
+            document.body.style.overflow = '';
+            currentApplicationProperty = null;
+        }
+        
+        function submitApplication() {
+            const firstName = document.getElementById('appFirstName').value;
+            const lastName = document.getElementById('appLastName').value;
+            const email = document.getElementById('appEmail').value;
+            const phone = document.getElementById('appPhone').value;
+            const moveIn = document.getElementById('appMoveIn').value;
+            const leaseTerm = document.getElementById('appLeaseTerm').value;
+            const income = document.getElementById('appIncome').value;
+            const employer = document.getElementById('appEmployer').value;
+            const terms = document.getElementById('appTerms').checked;
+            
+            if (!firstName || !lastName) { showToast('Please enter your name', 'error'); return; }
+            if (!email) { showToast('Please enter your email', 'error'); return; }
+            if (!phone) { showToast('Please enter your phone', 'error'); return; }
+            if (!terms) { showToast('Please accept the terms', 'error'); return; }
+            
+            // Store application
+            const applications = JSON.parse(localStorage.getItem('tenantApplications') || '[]');
+            applications.push({
+                id: Date.now(),
+                property: currentApplicationProperty.title,
+                propertyId: currentApplicationProperty.id,
+                firstName, lastName, email, phone, moveIn, leaseTerm, income, employer,
+                submittedAt: new Date().toISOString()
+            });
+            localStorage.setItem('tenantApplications', JSON.stringify(applications));
+            
+            document.getElementById('applicationContent').style.display = 'none';
+            document.getElementById('applicationSuccess').style.display = 'block';
+            document.getElementById('applicationFooter').style.display = 'none';
+            showToast('Application submitted!', 'success');
+        }
+        
+        // ==================== TOUR MODAL ====================
+        let currentTourProperty = null;
+        let selectedTourDate = null;
+        let selectedTourTime = null;
+        
+        function openTourModal(item) {
+            currentTourProperty = item;
+            document.getElementById('tourPropertyInfo').style.display = 'block';
+            document.getElementById('tourPropertyTitle').textContent = item.title;
+            document.getElementById('tourPropertyAddress').textContent = item.address;
+            document.getElementById('tourContent').style.display = 'block';
+            document.getElementById('tourSuccess').style.display = 'none';
+            document.getElementById('tourFooter').style.display = 'flex';
+            document.getElementById('tourModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            initTourCalendar();
+            
+            if (currentUser) {
+                const name = (currentUser.firstName || '') + ' ' + (currentUser.lastName || '');
+                document.getElementById('tourName').value = name.trim();
+            }
+        }
+        
+        function closeTourModal() {
+            document.getElementById('tourModal').classList.remove('show');
+            document.body.style.overflow = '';
+            currentTourProperty = null;
+            selectedTourDate = null;
+            selectedTourTime = null;
+        }
+        
+        function initTourCalendar() {
+            const grid = document.getElementById('tourDateGrid');
+            const today = new Date();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let html = '';
+            for (let i = 1; i <= 14; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const dayName = days[date.getDay()];
+                const dayNum = date.getDate();
+                const month = date.getMonth() + 1;
+                const dateStr = date.getFullYear() + '-' + String(month).padStart(2, '0') + '-' + String(dayNum).padStart(2, '0');
+                html += '<div class="tour-date" onclick="selectTourDate(\'' + dateStr + '\', this)" data-date="' + dateStr + '"><div class="day-name">' + dayName + '</div><div class="day-num">' + dayNum + '</div></div>';
+            }
+            grid.innerHTML = html;
+        }
+        
+        function selectTourDate(dateStr, element) {
+            selectedTourDate = dateStr;
+            document.querySelectorAll('.tour-date').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        function selectTimeSlot(element, time) {
+            selectedTourTime = time;
+            document.querySelectorAll('.tour-time-slot').forEach(s => s.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        function submitTour() {
+            const name = document.getElementById('tourName').value;
+            const phone = document.getElementById('tourPhone').value;
+            
+            if (!selectedTourDate) { showToast('Please select a date', 'error'); return; }
+            if (!selectedTourTime) { showToast('Please select a time', 'error'); return; }
+            if (!name) { showToast('Please enter your name', 'error'); return; }
+            if (!phone) { showToast('Please enter your phone', 'error'); return; }
+            
+            const tours = JSON.parse(localStorage.getItem('tenantTours') || '[]');
+            tours.push({
+                id: Date.now(),
+                property: currentTourProperty.title,
+                propertyId: currentTourProperty.id,
+                date: selectedTourDate,
+                time: selectedTourTime,
+                name, phone,
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('tenantTours', JSON.stringify(tours));
+            
+            document.getElementById('tourContent').style.display = 'none';
+            document.getElementById('tourSuccess').style.display = 'block';
+            document.getElementById('tourFooter').style.display = 'none';
+            showToast('Tour scheduled!', 'success');
+        }
+        
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function tenantLogout() { localStorage.removeItem('apartmentHubUser'); showToast('Logged out successfully', 'success'); setTimeout(() => window.location.href = 'index.html', 1000); }
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.style.cssText = 'position:fixed;bottom:30px;right:30px;padding:15px 25px;border-radius:8px;z-index:3000;background:' + (type === 'success' ? '#10b981' : '#ef4444') + ';color:white;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+    </script>
+</body>
+</html>

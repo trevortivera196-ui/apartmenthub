@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - ApartmentHub</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tenant-wrapper { display: flex; min-height: 100vh; }
+        .tenant-sidebar { width: 260px; background: #1f2937; color: white; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
+        .tenant-sidebar-header { padding: 25px 20px; border-bottom: 1px solid #374151; }
+        .tenant-sidebar-header .logo { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 5px; }
+        .tenant-sidebar-header .logo span { color: #60a5fa; }
+        .tenant-sidebar-header p { font-size: 0.85rem; color: #9ca3af; }
+        .tenant-sidebar-nav { padding: 20px 0; }
+        .nav-section { margin-bottom: 25px; }
+        .nav-section-title { padding: 0 20px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 10px; }
+        .tenant-sidebar-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #d1d5db; text-decoration: none; transition: var(--transition); cursor: pointer; border-left: 3px solid transparent; }
+        .tenant-sidebar-link:hover, .tenant-sidebar-link.active { background: #374151; color: white; border-left-color: #60a5fa; }
+        .tenant-sidebar-link .icon { font-size: 1.2rem; width: 24px; text-align: center; }
+        .tenant-sidebar-link .badge { margin-left: auto; background: var(--primary-color); color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; }
+        .tenant-sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; border-top: 1px solid #374151; background: #1f2937; }
+        .tenant-user { display: flex; align-items: center; gap: 12px; }
+        .tenant-avatar { width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .tenant-info strong { display: block; font-size: 0.9rem; }
+        .tenant-info span { font-size: 0.8rem; color: #9ca3af; }
+        .tenant-main { flex: 1; margin-left: 260px; background: #f3f4f6; }
+        .tenant-header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 50; }
+        .tenant-header h1 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 3px; }
+        .tenant-header p { font-size: 0.9rem; color: var(--text-light); }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .header-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f3f4f6; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: var(--transition); position: relative; }
+        .tenant-content { padding: 30px; }
+        
+        /* Messages Layout */
+        .messages-container { display: grid; grid-template-columns: 350px 1fr; gap: 25px; height: calc(100vh - 200px); min-height: 500px; }
+        .conversations-list { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+        .conversations-header { padding: 20px; border-bottom: 1px solid #e5e7eb; }
+        .conversations-header h2 { font-size: 1.1rem; font-weight: 600; color: #1f2937; }
+        .conversations-search { padding: 15px 20px; border-bottom: 1px solid #e5e7eb; }
+        .conversations-search input { width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.9rem; }
+        .conversations-search input:focus { outline: none; border-color: var(--primary-color); }
+        .conversations { flex: 1; overflow-y: auto; }
+        .conversation-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: var(--transition); }
+        .conversation-item:hover { background: #f9fafb; }
+        .conversation-item.active { background: #eff6ff; border-left: 3px solid var(--primary-color); }
+        .conversation-avatar { width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; flex-shrink: 0; }
+        .conversation-info { flex: 1; min-width: 0; }
+        .conversation-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .conversation-name { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
+        .conversation-time { font-size: 0.75rem; color: #9ca3af; }
+        .conversation-preview { font-size: 0.85rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .conversation-item.unread .conversation-name { color: var(--primary-color); }
+        .conversation-item.unread .conversation-preview { color: #1f2937; font-weight: 500; }
+        .unread-dot { width: 8px; height: 8px; background: var(--primary-color); border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+        
+        /* Chat Area */
+        .chat-area { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 15px; }
+        .chat-header-avatar { width: 44px; height: 44px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+        .chat-header-info h3 { font-size: 1rem; font-weight: 600; color: #1f2937; }
+        .chat-header-info p { font-size: 0.85rem; color: #10b981; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #f9fafb; }
+        .message { display: flex; gap: 10px; margin-bottom: 15px; }
+        .message.incoming { flex-direction: row-reverse; }
+        .message-avatar { width: 36px; height: 36px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; flex-shrink: 0; }
+        .message.incoming .message-avatar { background: var(--primary-color); color: white; }
+        .message-content { max-width: 70%; }
+        .message-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; }
+        .message.incoming .message-bubble { background: var(--primary-color); color: white; border-bottom-right-radius: 4px; }
+        .message:not(.incoming) .message-bubble { background: white; color: #1f2937; border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .message-time { font-size: 0.75rem; color: #9ca3af; margin-top: 5px; }
+        .message.incoming .message-time { text-align: right; }
+        
+        /* Compose Area */
+        .compose-area { padding: 20px; border-top: 1px solid #e5e7eb; background: white; }
+        .compose-input { display: flex; gap: 10px; align-items: center; }
+        .compose-input input { flex: 1; padding: 12px 20px; border: 2px solid #e5e7eb; border-radius: 25px; font-size: 0.95rem; }
+        .compose-input input:focus { outline: none; border-color: var(--primary-color); }
+        .compose-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--primary-color); color: white; border: none; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .compose-btn:hover { background: var(--primary-dark); transform: scale(1.05); }
+        
+        .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 20px; background: none; border: none; color: #f87171; cursor: pointer; font-size: 0.95rem; transition: var(--transition); margin-top: 10px; }
+        .logout-btn:hover { background: #374151; }
+        .mobile-menu-toggle { display: none; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--primary-color); color: white; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 200; }
+        
+        @media (max-width: 992px) { 
+            .tenant-sidebar { transform: translateX(-100%); } 
+            .tenant-sidebar.show { transform: translateX(0); } 
+            .tenant-main { margin-left: 0; } 
+            .mobile-menu-toggle { display: flex; align-items: center; justify-content: center; }
+            .messages-container { grid-template-columns: 1fr; }
+            .conversations-list { display: none; }
+            .conversations-list.show { display: flex; position: fixed; inset: 0; z-index: 150; border-radius: 0; }
+        }
+        @media (max-width: 768px) { .tenant-content { padding: 15px; } }
+    </style>
+</head>
+<body>
+    <div class="tenant-wrapper">
+        <aside class="tenant-sidebar" id="sidebar">
+            <div class="tenant-sidebar-header">
+                <div class="logo">Apartment<span>Hub</span></div>
+                <p>Tenant Portal</p>
+            </div>
+            <nav class="tenant-sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="tenant-dashboard.html" class="tenant-sidebar-link">
+                        <span class="icon">📊</span>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Search</div>
+                    <a href="tenant-listings.html" class="tenant-sidebar-link">
+                        <span class="icon">🔍</span>
+                        Browse Listings
+                    </a>
+                    <a href="tenant-vacancies.html" class="tenant-sidebar-link">
+                        <span class="icon">🚪</span>
+                        Vacancies
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">My Account</div>
+                    <a href="tenant-dashboard.html#saved" class="tenant-sidebar-link">
+                        <span class="icon">❤️</span>
+                        Saved Listings
+                        <span class="badge" id="savedCount">0</span>
+                    </a>
+                    <a href="tenant-dashboard.html#tours" class="tenant-sidebar-link">
+                        <span class="icon">📅</span>
+                        Tours
+                    </a>
+                    <a href="tenant-messages.html" class="tenant-sidebar-link active">
+                        <span class="icon">💬</span>
+                        Messages
+                        <span class="badge">2</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="tenant-sidebar-footer">
+                <div class="tenant-user">
+                    <div class="tenant-avatar" id="userInitial">T</div>
+                    <div class="tenant-info">
+                        <strong id="userName">Tenant</strong>
+                        <span id="userEmail">tenant@example.com</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="tenantLogout()">
+                    <span>🚪</span> Logout
+                </button>
+            </div>
+        </aside>
+        <main class="tenant-main">
+            <header class="tenant-header">
+                <div class="header-left">
+                    <h1>Messages</h1>
+                    <p>Communicate with landlords and property managers</p>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" onclick="toggleSidebar()">☰</button>
+                </div>
+            </header>
+            <div class="tenant-content">
+                <!-- Messages Container -->
+                <div class="messages-container">
+                    <!-- Conversations List -->
+                    <div class="conversations-list" id="conversationsList">
+                        <div class="conversations-header">
+                            <h2>Conversations</h2>
+                        </div>
+                        <div class="conversations-search">
+                            <input type="text" placeholder="Search conversations...">
+                        </div>
+                        <div class="conversations" id="conversationsContainer">
+                            <!-- Conversations will be rendered here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Area -->
+                    <div class="chat-area">
+                        <div class="chat-header">
+                            <div class="chat-header-avatar" id="chatAvatar">A</div>
+                            <div class="chat-header-info">
+                                <h3 id="chatName">ApartmentHub Support</h3>
+                                <p id="chatStatus">Online</p>
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="chatMessages">
+                            <!-- Messages will be rendered here -->
+                        </div>
+                        <div class="compose-area">
+                            <div class="compose-input">
+                                <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                                <button class="compose-btn" onclick="sendMessage()">➤</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <script>
+        const conversationsData = [
+            { id: 1, name: "ApartmentHub Support", initial: "A", status: "Online", unread: true, lastMessage: "Welcome to ApartmentHub! Let us know if you need help.", time: "2h ago", messages: [
+                { text: "Welcome to ApartmentHub! Let us know if you need help finding your perfect home.", time: "2h ago", incoming: true },
+                { text: "Hi, I'm looking for a 1-bedroom apartment near downtown.", time: "1h ago", incoming: false },
+                { text: "Great! I can help you with that. Check out our listings section for many options near downtown.", time: "1h ago", incoming: true },
+                { text: "Thanks! I'll take a look.", time: "30m ago", incoming: false }
+            ]},
+            { id: 2, name: "Modern Downtown Apartment", initial: "M", status: "Replied today", unread: true, lastMessage: "Your tour request has been confirmed for tomorrow at 2 PM.", time: "1d ago", messages: [
+                { text: "Hi, I'd like to schedule a tour for the Modern Downtown Apartment.", time: "2d ago", incoming: false },
+                { text: "Of course! What time works best for you?", time: "2d ago", incoming: true },
+                { text: "Would tomorrow at 2 PM work?", time: "1d ago", incoming: false },
+                { text: "Your tour request has been confirmed for tomorrow at 2 PM.", time: "1d ago", incoming: true }
+            ]},
+            { id: 3, name: "Luxury Waterfront Condo", initial: "L", status: "3d ago", unread: false, lastMessage: "The lease application looks good. We'll send it for final review.", time: "3d ago", messages: [
+                { text: "I've submitted my application for the Luxury Waterfront Condo.", time: "5d ago", incoming: false },
+                { text: "Thanks! We'll review your application and get back to you.", time: "5d ago", incoming: true },
+                { text: "Any updates on my application?", time: "4d ago", incoming: false },
+                { text: "The lease application looks good. We'll send it for final review.", time: "3d ago", incoming: true }
+            ]},
+            { id: 4, name: "Cozy Studio near Campus", initial: "C", status: "1w ago", unread: false, lastMessage: "Yes, the studio includes all utilities.", time: "1w ago", messages: [
+                { text: "Does the rent include utilities?", time: "1w ago", incoming: false },
+                { text: "Yes, the studio includes all utilities.", time: "1w ago", incoming: true }
+            ]}
+        ];
+        
+        let currentConversation = conversationsData[0];
+        let currentUser = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedUser = localStorage.getItem('apartmentHubUser');
+            if (!savedUser) { window.location.href = 'index.html'; return; }
+            
+            currentUser = JSON.parse(savedUser);
+            document.getElementById('userName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('userInitial').textContent = currentUser.firstName.charAt(0).toUpperCase();
+            
+            updateSavedCount();
+            renderConversations();
+            renderMessages();
+        });
+        
+        function getSavedListings() {
+            return JSON.parse(localStorage.getItem('savedListings') || '[]');
+        }
+        
+        function updateSavedCount() {
+            document.getElementById('savedCount').textContent = getSavedListings().length;
+        }
+        
+        function renderConversations() {
+            const container = document.getElementById('conversationsContainer');
+            container.innerHTML = conversationsData.map(conv => `
+                <div class="conversation-item ${conv.id === currentConversation.id ? 'active' : ''} ${conv.unread ? 'unread' : ''}" onclick="selectConversation(${conv.id})">
+                    <div class="conversation-avatar">${conv.initial}</div>
+                    <div class="conversation-info">
+                        <div class="conversation-header">
+                            <span class="conversation-name">${conv.name}</span>
+                            <span class="conversation-time">${conv.time}</span>
+                        </div>
+                        <div class="conversation-preview">${conv.lastMessage}</div>
+                    </div>
+                    ${conv.unread ? '<div class="unread-dot"></div>' : ''}
+                </div>
+            `).join('');
+        }
+        
+        function renderMessages() {
+            const container = document.getElementById('chatMessages');
+            document.getElementById('chatAvatar').textContent = currentConversation.initial;
+            document.getElementById('chatName').textContent = currentConversation.name;
+            document.getElementById('chatStatus').textContent = currentConversation.status;
+            
+            container.innerHTML = currentConversation.messages.map(msg => `
+                <div class="message ${msg.incoming ? 'incoming' : ''}">
+                    <div class="message-avatar">${msg.incoming ? currentConversation.initial : currentUser.firstName.charAt(0)}</div>
+                    <div class="message-content">
+                        <div class="message-bubble">${msg.text}</div>
+                        <div class="message-time">${msg.time}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function selectConversation(id) {
+            currentConversation = conversationsData.find(c => c.id === id);
+            renderConversations();
+            renderMessages();
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const now = new Date();
+            const timeStr = "Just now";
+            
+            currentConversation.messages.push({ text, time: timeStr, incoming: false });
+            currentConversation.lastMessage = text;
+            currentConversation.time = "Just now";
+            
+            input.value = '';
+            renderConversations();
+            renderMessages();
+            
+            // Simulate reply
+            setTimeout(() => {
+                currentConversation.messages.push({ text: "Thanks for your message! We'll get back to you soon.", time: "Just now", incoming: true });
+                currentConversation.lastMessage = "Thanks for your message! We'll get back to you soon.";
+                renderConversations();
+                renderMessages();
+            }, 1500);
+            
+            showToast('Message sent!', 'success');
+        }
+        
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+        
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function tenantLogout() { localStorage.removeItem('apartmentHubUser'); showToast('Logged out successfully', 'success'); setTimeout(() => window.location.href = 'index.html', 1000); }
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.style.cssText = 'position:fixed;bottom:30px;right:30px;padding:15px 25px;border-radius:8px;z-index:3000;background:' + (type === 'success' ? '#10b981' : '#ef4444') + ';color:white;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+    </script>
+</body>
+</html>

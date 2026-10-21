@@ -1,0 +1,462 @@
+<?php require_once 'config.php';
+
+if (!isAdminLoggedIn()) {
+    redirect('admin-login.php');
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - <?php echo SITE_NAME; ?> Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #1f2937; color: white; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
+        .sidebar-header { padding: 25px 20px; border-bottom: 1px solid #374151; }
+        .sidebar-header .logo { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 5px; }
+        .sidebar-header .logo span { color: #60a5fa; }
+        .sidebar-header p { font-size: 0.85rem; color: #9ca3af; }
+        .sidebar-nav { padding: 20px 0; }
+        .nav-section { margin-bottom: 25px; }
+        .nav-section-title { padding: 0 20px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 10px; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #d1d5db; text-decoration: none; transition: var(--transition); cursor: pointer; border-left: 3px solid transparent; }
+        .sidebar-link:hover, .sidebar-link.active { background: #374151; color: white; border-left-color: #60a5fa; }
+        .sidebar-link .icon { font-size: 1.2rem; width: 24px; text-align: center; }
+        .sidebar-link .badge { margin-left: auto; background: #ef4444; color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; }
+        .sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; border-top: 1px solid #374151; background: #1f2937; }
+        .admin-user { display: flex; align-items: center; gap: 12px; }
+        .admin-avatar { width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .admin-info strong { display: block; font-size: 0.9rem; }
+        .admin-info span { font-size: 0.8rem; color: #9ca3af; }
+        .main-content { flex: 1; margin-left: 260px; background: #f3f4f6; }
+        .top-header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 50; }
+        .header-left h1 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 3px; }
+        .header-left p { font-size: 0.9rem; color: var(--text-light); }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .header-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f3f4f6; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: var(--transition); position: relative; }
+        .page-content { padding: 30px; }
+        
+        .settings-container { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
+        .settings-nav { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px; height: fit-content; }
+        .settings-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; cursor: pointer; transition: var(--transition); margin-bottom: 5px; }
+        .settings-nav-item:hover { background: #f3f4f6; }
+        .settings-nav-item.active { background: var(--primary-color); color: white; }
+        .settings-nav-item .icon { font-size: 1.2rem; }
+        .settings-content { display: flex; flex-direction: column; gap: 25px; }
+        
+        .settings-section { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+        .section-header { padding: 20px 25px; border-bottom: 1px solid #e5e7eb; }
+        .section-header h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+        .section-header p { font-size: 0.9rem; color: var(--text-light); }
+        .section-body { padding: 25px; }
+        
+        .form-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f3f4f6; }
+        .form-item:last-child { border-bottom: none; }
+        .form-label h4 { font-size: 0.95rem; font-weight: 500; color: var(--text-dark); margin-bottom: 4px; }
+        .form-label p { font-size: 0.85rem; color: var(--text-light); }
+        .form-input { width: 250px; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.9rem; }
+        .form-input:focus { outline: none; border-color: var(--primary-color); }
+        .form-select { width: 250px; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.9rem; background: white; }
+        
+        .toggle { position: relative; width: 50px; height: 28px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; transition: 0.3s; border-radius: 28px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: 0.3s; border-radius: 50%; }
+        .toggle input:checked + .toggle-slider { background-color: var(--primary-color); }
+        .toggle input:checked + .toggle-slider:before { transform: translateX(22px); }
+        
+        .profile-header { display: flex; align-items: center; gap: 25px; padding-bottom: 25px; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+        .profile-avatar { width: 100px; height: 100px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem; font-weight: 600; }
+        .profile-info h2 { font-size: 1.3rem; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+        .profile-info p { color: var(--text-light); margin-bottom: 15px; }
+        .profile-btn { padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+        .profile-btn.secondary { background: white; border: 2px solid #e5e7eb; color: var(--text-dark); }
+        
+        .save-bar { background: white; padding: 20px 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: flex-end; gap: 15px; position: sticky; bottom: 20px; }
+        .save-btn { padding: 12px 24px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 500; }
+        .save-btn:hover { background: var(--primary-dark); }
+        .cancel-btn { padding: 12px 24px; background: white; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
+        .cancel-btn:hover { border-color: #d1d5db; }
+        
+        .logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 20px; background: none; border: none; color: #f87171; cursor: pointer; font-size: 0.95rem; transition: var(--transition); margin-top: 10px; }
+        .logout-btn:hover { background: #374151; }
+        .mobile-menu-toggle { display: none; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--primary-color); color: white; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 200; }
+        @media (max-width: 992px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } .main-content { margin-left: 0; } .mobile-menu-toggle { display: flex; align-items: center; justify-content: center; } .settings-container { grid-template-columns: 1fr; } .settings-nav { display: flex; overflow-x: auto; gap: 10px; padding: 15px; } .settings-nav-item { white-space: nowrap; } }
+        @media (max-width: 768px) { .page-content { padding: 15px; } .form-item { flex-direction: column; align-items: flex-start; gap: 12px; } .form-input, .form-select { width: 100%; } .profile-header { flex-direction: column; text-align: center; } }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><?php echo SITE_NAME; ?><span>Hub</span></div>
+                <p>Admin Portal</p>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="admin-dashboard.php" class="sidebar-link">
+                        <span class="icon">📊</span>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Property Management</div>
+                    <a href="admin-properties.php" class="sidebar-link">
+                        <span class="icon">🏠</span>
+                        Properties
+                    </a>
+                    <a href="admin-vacancies.php" class="sidebar-link">
+                        <span class="icon">🚪</span>
+                        Vacancies
+                        <span class="badge">12</span>
+                    </a>
+                    <a href="admin-listings.php" class="sidebar-link">
+                        <span class="icon">📋</span>
+                        Listings
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Media</div>
+                    <a href="admin-gallery.php" class="sidebar-link">
+                        <span class="icon">🖼️</span>
+                        Gallery
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Tenant Management</div>
+                    <a href="admin-tenants.php" class="sidebar-link">
+                        <span class="icon">👥</span>
+                        Tenants
+                    </a>
+                    <a href="admin-applications.php" class="sidebar-link">
+                        <span class="icon">📝</span>
+                        Applications
+                        <span class="badge">5</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Financial</div>
+                    <a href="admin-payroll.php" class="sidebar-link">
+                        <span class="icon">💰</span>
+                        Payroll
+                    </a>
+                    <a href="admin-payments.php" class="sidebar-link">
+                        <span class="icon">💳</span>
+                        Payments
+                    </a>
+                    <a href="admin-reports.php" class="sidebar-link">
+                        <span class="icon">📈</span>
+                        Reports
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Communication</div>
+                    <a href="admin-messages.php" class="sidebar-link">
+                        <span class="icon">💬</span>
+                        Messages
+                        <span class="badge">3</span>
+                    </a>
+                    <a href="admin-reviews.php" class="sidebar-link">
+                        <span class="icon">⭐</span>
+                        Reviews
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="admin-settings.php" class="sidebar-link active">
+                        <span class="icon">⚙️</span>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-user">
+                    <div class="admin-avatar">A</div>
+                    <div class="admin-info">
+                        <strong>Administrator</strong>
+                        <span><?php echo ADMIN_EMAIL; ?></span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="window.location.href='admin-login.php?logout=1'">
+                    <span>🚪</span> Logout
+                </button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h1>Settings</h1>
+                    <p>Manage your account and preferences</p>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" onclick="toggleSidebar()">☰</button>
+                </div>
+            </header>
+            <div class="page-content">
+                <div class="settings-container">
+                    <div class="settings-nav">
+                        <div class="settings-nav-item active" onclick="showSection('profile')">
+                            <span class="icon">👤</span>
+                            <span>Profile</span>
+                        </div>
+                        <div class="settings-nav-item" onclick="showSection('notifications')">
+                            <span class="icon">🔔</span>
+                            <span>Notifications</span>
+                        </div>
+                        <div class="settings-nav-item" onclick="showSection('security')">
+                            <span class="icon">🔒</span>
+                            <span>Security</span>
+                        </div>
+                        <div class="settings-nav-item" onclick="showSection('preferences')">
+                            <span class="icon">🎨</span>
+                            <span>Preferences</span>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-content">
+                        <div class="settings-section" id="profileSection">
+                            <div class="section-header">
+                                <h3>👤 Admin Profile</h3>
+                                <p>Manage your personal information</p>
+                            </div>
+                            <div class="section-body">
+                                <div class="profile-header">
+                                    <div class="profile-avatar">A</div>
+                                    <div class="profile-info">
+                                        <h2>Administrator</h2>
+                                        <p><?php echo ADMIN_EMAIL; ?></p>
+                                        <button class="profile-btn secondary">Change Photo</button>
+                                        <button class="profile-btn">Remove Photo</button>
+                                    </div>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>First Name</h4>
+                                        <p>Your first name as it appears on your profile</p>
+                                    </div>
+                                    <input type="text" class="form-input" value="Admin">
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Last Name</h4>
+                                        <p>Your last name as it appears on your profile</p>
+                                    </div>
+                                    <input type="text" class="form-input" value="User">
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Email Address</h4>
+                                        <p>Used for login and important notifications</p>
+                                    </div>
+                                    <input type="email" class="form-input" value="<?php echo ADMIN_EMAIL; ?>">
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Phone Number</h4>
+                                        <p>For urgent matters and two-factor authentication</p>
+                                    </div>
+                                    <input type="tel" class="form-input" value="+1 (555) 123-4567">
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Role</h4>
+                                        <p>Your administrative role in the system</p>
+                                    </div>
+                                    <input type="text" class="form-input" value="Super Administrator" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section" id="notificationsSection">
+                            <div class="section-header">
+                                <h3>🔔 Notification Preferences</h3>
+                                <p>Choose how you want to be notified</p>
+                            </div>
+                            <div class="section-body">
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Email Notifications</h4>
+                                        <p>Receive updates and alerts via email</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>New Applications</h4>
+                                        <p>Get notified when new tenant applications are submitted</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Payment Alerts</h4>
+                                        <p>Notifications for overdue or failed payments</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Maintenance Requests</h4>
+                                        <p>Alerts for new maintenance tickets</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Review Notifications</h4>
+                                        <p>When new tenant reviews are posted</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section" id="securitySection">
+                            <div class="section-header">
+                                <h3>🔒 Security Settings</h3>
+                                <p>Protect your account</p>
+                            </div>
+                            <div class="section-body">
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Password</h4>
+                                        <p>Last changed 30 days ago</p>
+                                    </div>
+                                    <button class="save-btn secondary" onclick="changePassword()">Change Password</button>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Two-Factor Authentication</h4>
+                                        <p>Add an extra layer of security</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Login Alerts</h4>
+                                        <p>Get notified of new sign-ins to your account</p>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Active Sessions</h4>
+                                        <p>Currently logged in on 2 devices</p>
+                                    </div>
+                                    <button class="save-btn secondary" onclick="manageSessions()">Manage Sessions</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section" id="preferencesSection">
+                            <div class="section-header">
+                                <h3>🎨 Preferences</h3>
+                                <p>Customize your experience</p>
+                            </div>
+                            <div class="section-body">
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Language</h4>
+                                        <p>Select your preferred language</p>
+                                    </div>
+                                    <select class="form-select">
+                                        <option value="en" selected>English (US)</option>
+                                        <option value="es">Español</option>
+                                        <option value="fr">Français</option>
+                                    </select>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Timezone</h4>
+                                        <p>Set your local timezone</p>
+                                    </div>
+                                    <select class="form-select">
+                                        <option value="EST" selected>Eastern Time (ET)</option>
+                                        <option value="CST">Central Time (CT)</option>
+                                        <option value="PST">Pacific Time (PT)</option>
+                                    </select>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Date Format</h4>
+                                        <p>How dates are displayed</p>
+                                    </div>
+                                    <select class="form-select">
+                                        <option value="mdy" selected>MM/DD/YYYY</option>
+                                        <option value="dmy">DD/MM/YYYY</option>
+                                    </select>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">
+                                        <h4>Currency</h4>
+                                        <p>Default currency for financial data</p>
+                                    </div>
+                                    <select class="form-select">
+                                        <option value="USD" selected>USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="save-bar">
+                    <button class="cancel-btn" onclick="resetForm()">Cancel</button>
+                    <button class="save-btn" onclick="saveSettings()">Save Changes</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        
+        function showSection(section) {
+            document.querySelectorAll('.settings-nav-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.settings-nav-item').classList.add('active');
+            showToast('Showing ' + section + ' settings', 'success');
+        }
+        
+        function changePassword() { showToast('Opening password change form...', 'success'); }
+        function manageSessions() { showToast('Opening session management...', 'success'); }
+        function resetForm() { showToast('Form reset', 'success'); }
+        function saveSettings() { showToast('Settings saved successfully!', 'success'); }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.style.cssText = 'position:fixed;bottom:30px;right:30px;padding:15px 25px;border-radius:8px;z-index:3000;background:' + (type === 'success' ? '#10b981' : '#ef4444') + ';color:white;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.transform = 'translateX(150%)'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+    </script>
+</body>
+</html>
